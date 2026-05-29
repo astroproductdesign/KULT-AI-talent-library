@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
 
+const getApiBase = () => {
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  if (url && !url.startsWith('http')) url = `https://${url}`;
+  return url;
+};
+
 interface LoginProps {
   onLoginSuccess: () => void;
   onCancel: () => void;
@@ -10,14 +16,28 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Hardcoded credentials for demo purposes
-    if (username === 'admin' && password === 'astrogobeyond@1') {
-      onLoginSuccess();
-    } else {
-      setError('Invalid credentials.');
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        onLoginSuccess();
+      } else {
+        setError(data.error || 'Invalid credentials.');
+      }
+    } catch {
+      setError('Unable to reach server. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,12 +90,13 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
-              className="flex-1 flex items-center justify-center space-x-2 bg-white text-black py-3 rounded-full font-bold hover:bg-zinc-200 transition-colors"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center space-x-2 bg-white text-black py-3 rounded-full font-bold hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Login</span>
-              <ArrowRight size={18} />
+              <span>{loading ? 'Checking...' : 'Login'}</span>
+              {!loading && <ArrowRight size={18} />}
             </button>
           </div>
         </form>

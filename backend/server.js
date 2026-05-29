@@ -214,6 +214,20 @@ app.delete('/api/talents/:id', async (req, res) => {
   }
 });
 
+// POST /api/auth/login - Validate admin credentials (stored in env, never exposed to client)
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  const validUser = process.env.ADMIN_USERNAME;
+  const validPass = process.env.ADMIN_PASSWORD;
+  if (!validUser || !validPass) {
+    return res.status(500).json({ error: 'Server auth not configured.' });
+  }
+  if (username === validUser && password === validPass) {
+    return res.json({ success: true });
+  }
+  return res.status(401).json({ error: 'Invalid credentials.' });
+});
+
 // POST /api/upload - Upload image to Cloudinary
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   console.log('API: Received upload request');
