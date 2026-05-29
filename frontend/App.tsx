@@ -147,6 +147,22 @@ export default function App() {
     }
   };
 
+  const handleReorderTalents = async (reordered: Talent[]) => {
+    // Optimistically update local state immediately
+    setTalents(reordered);
+    // Persist new order to Supabase
+    try {
+      const order = reordered.map((t, i) => ({ id: t.id, position: i }));
+      await fetch(`${API_BASE}/api/reorder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order }),
+      });
+    } catch (err) {
+      console.error('Failed to persist talent order:', err);
+    }
+  };
+
   const handleSaveTalent = async (savedTalent: Talent) => {
     try {
       if (editingTalent) {
@@ -214,11 +230,12 @@ export default function App() {
       case 'admin':
         if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} onCancel={navigateToHome} />;
         return (
-          <AdminDashboard 
-            talents={talents} 
+          <AdminDashboard
+            talents={talents}
             onAddTalent={handleAddTalentClick}
             onEditTalent={handleEditTalentClick}
             onDeleteTalent={handleDeleteTalent}
+            onReorderTalents={handleReorderTalents}
           />
         );
       case 'form':

@@ -11,8 +11,7 @@ import fetch from 'node-fetch';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { WebSocketServer, WebSocket } from 'ws';
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { createClient } from '@supabase/supabase-js';
 import cloudinary from 'cloudinary';
 import multer from 'multer';
 
@@ -32,35 +31,57 @@ app.use(cors({
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Firebase initialization
-let db;
-try {
-  let firebaseOptions = {};
-  
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.log('Firebase: Using service account from environment variable.');
-    let serviceAccount;
-    try {
-      // Check if it's base64 encoded or raw JSON
-      const decoded = process.env.FIREBASE_SERVICE_ACCOUNT.startsWith('{') 
-        ? process.env.FIREBASE_SERVICE_ACCOUNT 
-        : Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString();
-      serviceAccount = JSON.parse(decoded);
-      firebaseOptions.credential = cert(serviceAccount);
-    } catch (e) {
-      console.error('Firebase: Failed to parse FIREBASE_SERVICE_ACCOUNT. Ensure it is valid JSON or Base64 JSON.', e.message);
-    }
-  } else {
-    console.log('Firebase: Using Application Default Credentials (ADC).');
-    firebaseOptions.projectId = process.env.GOOGLE_CLOUD_PROJECT;
-  }
+// Supabase initialization
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+console.log('Supabase: Client initialized.');
 
-  const firebaseApp = initializeApp(firebaseOptions);
-  db = getFirestore(firebaseApp);
-  console.log('Firebase: Initialized successfully.');
-} catch (error) {
-  console.error('Firebase: Initialization error:', error.message);
-  console.error('CRITICAL: App will likely fail if database is not accessible.');
+// Helpers: convert between camelCase (frontend) and snake_case (Supabase)
+function toDb(talent) {
+  const row = {
+    id:                talent.id,
+    name:              talent.name,
+    ethnicity:         talent.ethnicity,
+    gender:            talent.gender,
+    age_range:         talent.ageRange,
+    personality:       talent.personality,
+    best_fit:          talent.bestFit,
+    outfits:           talent.outfits,
+    voices:            talent.voices,
+    use_cases:         talent.useCases ?? null,
+    image_seed:        talent.imageSeed,
+    profile_image_url: talent.profileImageUrl ?? null,
+    main_image_url:    talent.mainImageUrl ?? null,
+    turnaround_urls:   talent.turnaroundUrls ?? null,
+    expression_urls:   talent.expressionUrls ?? null,
+    closeup_url:       talent.closeupUrl ?? null,
+  };
+  if (talent.position !== undefined) row.position = talent.position;
+  return row;
+}
+
+function fromDb(row) {
+  return {
+    id:              row.id,
+    name:            row.name,
+    ethnicity:       row.ethnicity,
+    gender:          row.gender,
+    ageRange:        row.age_range,
+    personality:     row.personality,
+    bestFit:         row.best_fit,
+    outfits:         row.outfits,
+    voices:          row.voices,
+    useCases:        row.use_cases,
+    imageSeed:       row.image_seed,
+    profileImageUrl: row.profile_image_url,
+    mainImageUrl:    row.main_image_url,
+    turnaroundUrls:  row.turnaround_urls,
+    expressionUrls:  row.expression_urls,
+    closeupUrl:      row.closeup_url,
+    position:        row.position ?? null,
+  };
 }
 
 // Cloudinary configuration
@@ -83,61 +104,83 @@ app.get('/api/test-services', async (req, res) => {
   const results = {
     timestamp: new Date().toISOString(),
     env: {
-      project: GOOGLE_CLOUD_PROJECT,
       port: PORT,
-      cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
+      cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME,
+      supabase: !!process.env.SUPABASE_URL,
     }
   };
-  
+
   try {
-    if (!db) throw new Error('Firestore DB not initialized');
-    const testDoc = await db.collection('test_connection').add({ 
-      test: true, 
-      time: new Date().toISOString() 
-    });
-    results.firestore = `OK (Write test successful: ${testDoc.id})`;
-    await db.collection('test_connection').doc(testDoc.id).delete();
+    const { data, error } = await supabase.from('talents').select('id').limit(1);
+    if (error) throw new Error(error.message);
+    results.supabase = 'OK';
   } catch (e) {
-    results.firestore = `ERROR: ${e.message}`;
+    results.supabase = `ERROR: ${e.message}`;
   }
-  
-  try {
-    if (process.env.CLOUDINARY_CLOUD_NAME) {
-      results.cloudinary = 'CONFIGURED';
-    } else {
-      results.cloudinary = 'MISSING CREDENTIALS';
-    }
-  } catch (e) {
-    results.cloudinary = `ERROR: ${e.message}`;
-  }
-  
+
+  results.cloudinary = process.env.CLOUDINARY_CLOUD_NAME ? 'CONFIGURED' : 'MISSING CREDENTIALS';
+
   res.json(results);
 });
 
 // --- Talent Management API Endpoints ---
 
-// GET /api/talents - Fetch all talents
+// GET /api/talents - Fetch all talents, ordered by position then created_at
 app.get('/api/talents', async (req, res) => {
   try {
-    const snapshot = await db.collection('talents').get();
-    const talents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json(talents);
+    // Try ordering by position; fall back to default order if column doesn't exist yet
+    let result = await supabase
+      .from('talents')
+      .select('*')
+      .order('position', { ascending: true, nullsFirst: false });
+    if (result.error && result.error.message.includes('column talents.position does not exist')) {
+      // Position column not yet added — return in natural DB order
+      result = await supabase.from('talents').select('*');
+    }
+    if (result.error) throw new Error(result.error.message);
+    res.json(result.data.map(fromDb));
   } catch (error) {
     console.error('Error fetching talents:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// POST /api/talents - Create new talent
+// POST /api/talents - Create new talent (appended to end of order)
 app.post('/api/talents', async (req, res) => {
   console.log('API: Received request to create talent:', req.body?.name);
   try {
-    const talent = req.body;
-    const docRef = await db.collection('talents').add(talent);
-    console.log('API: Successfully created talent with ID:', docRef.id);
-    res.json({ id: docRef.id, ...talent });
+    // Assign position = current count so new talent goes to end
+    const { count } = await supabase.from('talents').select('*', { count: 'exact', head: true });
+    const row = toDb({ ...req.body, position: count ?? 0 });
+    const { data, error } = await supabase.from('talents').insert(row).select().single();
+    if (error) throw new Error(error.message);
+    console.log('API: Successfully created talent with ID:', data.id);
+    res.json(fromDb(data));
   } catch (error) {
     console.error('API Error creating talent:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/reorder - Persist drag-and-drop order to Supabase
+app.post('/api/reorder', async (req, res) => {
+  try {
+    const { order } = req.body; // [{ id, position }, ...]
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be an array' });
+    const updates = order.map(({ id, position }) =>
+      supabase.from('talents').update({ position }).eq('id', id)
+    );
+    const results = await Promise.all(updates);
+    const failed = results.find(r => r.error);
+    if (failed) {
+      if (failed.error.message.includes('column') && failed.error.message.includes('position')) {
+        return res.status(400).json({ error: 'position_column_missing', message: 'Run the SQL migration in Supabase to enable persistent ordering.' });
+      }
+      throw new Error(failed.error.message);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error reordering talents:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -147,10 +190,11 @@ app.put('/api/talents/:id', async (req, res) => {
   const { id } = req.params;
   console.log('API: Received request to update talent:', id);
   try {
-    const talent = req.body;
-    await db.collection('talents').doc(id).set(talent, { merge: true });
+    const row = toDb({ ...req.body, id });
+    const { data, error } = await supabase.from('talents').upsert(row).select().single();
+    if (error) throw new Error(error.message);
     console.log('API: Successfully updated talent:', id);
-    res.json({ id, ...talent });
+    res.json(fromDb(data));
   } catch (error) {
     console.error('API Error updating talent:', error);
     res.status(500).json({ error: error.message });
@@ -161,7 +205,8 @@ app.put('/api/talents/:id', async (req, res) => {
 app.delete('/api/talents/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await db.collection('talents').doc(id).delete();
+    const { error } = await supabase.from('talents').delete().eq('id', id);
+    if (error) throw new Error(error.message);
     res.json({ message: 'Deleted successfully' });
   } catch (error) {
     console.error('Error deleting talent:', error);
@@ -226,7 +271,7 @@ console.log(`Port: ${PORT}`);
 console.log(`Host: ${API_BACKEND_HOST}`);
 console.log(`Project ID: ${GOOGLE_CLOUD_PROJECT || 'MISSING'}`);
 console.log(`Location: ${GOOGLE_CLOUD_LOCATION}`);
-console.log(`Service Account: ${process.env.FIREBASE_SERVICE_ACCOUNT ? 'PROVIDED' : 'MISSING'}`);
+console.log(`Supabase: ${process.env.SUPABASE_URL ? 'CONFIGURED' : 'MISSING'}`);
 console.log(`Cloudinary: ${process.env.CLOUDINARY_CLOUD_NAME ? 'CONFIGURED' : 'INCOMPLETE'}`);
 console.log(`Proxy Header: ${process.env.PROXY_HEADER ? 'CUSTOM' : 'DEFAULT'}`);
 console.log('------------------------------------');
