@@ -1,0 +1,14 @@
+{
+  "name": "kult-ai-talent-library",
+  "workspaces": ["frontend", "backend"], 
+  "scripts": {
+    "build": "npm run build --prefix frontend",
+    "install-all": "npm install && npm install --prefix frontend && npm install --prefix backend",
+    "dev-frontend": "npm run dev --prefix frontend",
+    "dev-backend": "npm run dev --prefix backend",
+    "dev": "concurrently \"npm run dev-frontend\" \"npm run dev-backend\""
+  },
+  "devDependencies": {
+    "concurrently": "latest"
+  }
+}
