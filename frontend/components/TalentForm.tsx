@@ -45,6 +45,16 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   const [personalityStr, setPersonalityStr] = useState(formData.personality.join(', '));
   const [bestFitStr, setBestFitStr] = useState(formData.bestFit.join(', '));
 
+  // Age range: single base age input, auto-calculates +5 range
+  const parseBaseAge = (range: string) => range.match(/\d+/)?.[0] ?? '';
+  const [baseAge, setBaseAge] = useState<string>(parseBaseAge(formData.ageRange));
+  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setBaseAge(val);
+    const num = parseInt(val, 10);
+    setFormData(prev => ({ ...prev, ageRange: !isNaN(num) ? `${num} - ${num + 5}` : '' }));
+  };
+
   // Auto-generate ID from ethnicity + gender + name initials (e.g. MY-F-NP)
   useEffect(() => {
     const ethCode = ETHNICITY_CODES[formData.ethnicity] || '';
@@ -262,8 +272,22 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Age Range</label>
-                  <input required type="text" name="ageRange" value={formData.ageRange} onChange={handleChange} placeholder="e.g. 20 - 25" className={inputClass} />
+                  <label className={labelClass}>Age</label>
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={baseAge}
+                    onChange={handleAgeChange}
+                    placeholder="e.g. 25"
+                    className={inputClass}
+                  />
+                  {baseAge && !isNaN(Number(baseAge)) && (
+                    <p className="text-xs text-zinc-500 mt-2">
+                      Age range: <span className="text-cyan-400 font-mono">{baseAge} – {Number(baseAge) + 5}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
