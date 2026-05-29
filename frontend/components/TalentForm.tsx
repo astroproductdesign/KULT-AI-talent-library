@@ -208,7 +208,15 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className={labelClass}>Ethnicity</label>
-                  <input required type="text" name="ethnicity" value={formData.ethnicity} onChange={handleChange} placeholder="e.g. Chinese" className={inputClass} />
+                  <select required name="ethnicity" value={formData.ethnicity} onChange={handleChange} className={inputClass}>
+                    <option value="" disabled>Select ethnicity</option>
+                    <option value="Malay">Malay</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Iban">Iban</option>
+                    <option value="Kadazan-Dusun">Kadazan-Dusun</option>
+                    <option value="Others">Others</option>
+                  </select>
                 </div>
                 <div>
                   <label className={labelClass}>Gender</label>
