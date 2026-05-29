@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Talent, Outfit, Voice, UseCase } from '../types.ts';
 import { ArrowLeft, Save, UploadCloud, Plus, Trash2, Image as ImageIcon, Mic } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.ts';
+
+const ETHNICITY_CODES: Record<string, string> = {
+  'Malay':         'MY',
+  'Chinese':       'CN',
+  'Indian':        'IN',
+  'Iban':          'IB',
+  'Kadazan-Dusun': 'KD',
+  'Others':        'OT',
+};
 
 interface TalentFormProps {
   initialData?: Talent | null;
@@ -31,10 +40,26 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   const [formData, setFormData] = useState<Talent>(initialData || defaultTalent);
   const [activeTab, setActiveTab] = useState<FormTab>('basic');
   const [uploading, setUploading] = useState(false);
-  
+
   // Local states for comma-separated inputs to allow spaces/commas while typing
   const [personalityStr, setPersonalityStr] = useState(formData.personality.join(', '));
   const [bestFitStr, setBestFitStr] = useState(formData.bestFit.join(', '));
+
+  // Auto-generate ID from ethnicity + gender + name initials (e.g. MY-F-NP)
+  useEffect(() => {
+    const ethCode = ETHNICITY_CODES[formData.ethnicity] || '';
+    const genCode = formData.gender === 'F' ? 'F' : 'M';
+    const initials = formData.name
+      .trim()
+      .split(/\s+/)
+      .map(w => w[0]?.toUpperCase() || '')
+      .join('');
+    if (!ethCode || !initials) {
+      setFormData(prev => ({ ...prev, id: ethCode ? `${ethCode}-${genCode}-` : '' }));
+      return;
+    }
+    setFormData(prev => ({ ...prev, id: `${ethCode}-${genCode}-${initials}` }));
+  }, [formData.ethnicity, formData.gender, formData.name]);
 
   // --- Basic Handlers ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -196,8 +221,19 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
             <div className={activeTab === 'basic' ? 'block space-y-8' : 'hidden'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>Talent ID</label>
-                  <input required type="text" name="id" value={formData.id} onChange={handleChange} placeholder="e.g. MY-F-02" className={inputClass} />
+                  <label className={labelClass}>
+                    Talent ID
+                    <span className="ml-2 text-zinc-500 normal-case font-normal tracking-normal">— auto-generated from ethnicity, gender &amp; name</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="id"
+                    value={formData.id}
+                    readOnly
+                    placeholder="Select ethnicity and gender below"
+                    required
+                    className={`${inputClass} opacity-60 cursor-not-allowed select-none bg-zinc-900 font-mono tracking-widest text-cyan-400`}
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Full Name</label>

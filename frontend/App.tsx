@@ -155,32 +155,47 @@ export default function App() {
   const handleSaveTalent = async (savedTalent: Talent) => {
     try {
       if (editingTalent) {
-        const { error } = await supabase
-          .from('talents')
-          .upsert(toDb(savedTalent));
-        if (error) throw error;
+        const idChanged = editingTalent.id !== savedTalent.id;
+        if (idChanged) {
+          // ID changed — delete old record and insert with new ID
+          const { error: delError } = await supabase
+            .from('talents')
+            .delete()
+            .eq('id', editingTalent.id);
+          if (delError) throw delError;
+          const { error: insError } = await supabase
+            .from('talents')
+            .insert(toDb(savedTalent));
+          if (insError) throw insError;
+        } else {
+          const { error } = await supabase
+            .from('talents')
+            .upsert(toDb(savedTalent), { onConflict: 'id' });
+          if (error) throw error;
+        }
+        // Update local state — replace by old ID, put new talent object in
         setTalents(prev => prev.map(t => t.id === editingTalent.id ? savedTalent : t));
+        // If user was viewing the detail page of the edited talent, update the selected ID
+        if (selectedTalentId === editingTalent.id) {
+          setSelectedTalentId(savedTalent.id);
+          setView('detail');
+        } else {
+          navigateToAdmin();
+        }
       } else {
-        const { count } = await supabase
-          .from('talents')
-          .select('*', { count: 'exact', head: true });
         const { data, error } = await supabase
           .from('talents')
-          .insert(toDb({ ...savedTalent, position: count ?? 0 }))
+          .insert(toDb({ ...savedTalent, position: talents.length }))
           .select()
           .single();
         if (error) throw error;
         setTalents(prev => [...prev, fromDb(data)]);
-      }
-
-      if (selectedTalentId === savedTalent.id) {
-        setView('detail');
-      } else {
         navigateToAdmin();
       }
-    } catch (err) {
+    } catch (err: any) {
+      const msg = err?.message || err?.details || JSON.stringify(err);
       console.error('Error saving talent:', err);
-      alert('Failed to save talent. Please try again.');
+      alert(`Save failed: ${msg}`);
     }
   };
 
@@ -229,6 +244,7 @@ export default function App() {
         return (
           <TalentForm
             initialData={editingTalent}
+
             onSave={handleSaveTalent}
             onCancel={() => {
               if (selectedTalentId) {
