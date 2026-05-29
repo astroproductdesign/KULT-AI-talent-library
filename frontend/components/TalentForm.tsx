@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import { Talent, Outfit, Voice, UseCase } from '../types.ts';
 import { ArrowLeft, Save, UploadCloud, Plus, Trash2, Image as ImageIcon, Mic } from 'lucide-react';
-
-// API base URL - must match App.tsx
-const getApiBase = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  if (url && !url.startsWith('http')) {
-    url = `https://${url}`;
-  }
-  return url;
-};
-
-const API_BASE = getApiBase();
+import { supabase } from '../lib/supabaseClient.ts';
 
 interface TalentFormProps {
   initialData?: Talent | null;
@@ -64,26 +54,26 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     setFormData(prev => ({ ...prev, [field]: arrayValue }));
   };
 
-  // --- File Upload Handlers (Upload to Cloudinary via API) ---
+  // --- File Upload Handlers (Supabase Storage) ---
+  const uploadToStorage = async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from('talent-assets')
+      .upload(fileName, file, { upsert: true });
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage
+      .from('talent-assets')
+      .getPublicUrl(data.path);
+    return publicUrl;
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       setUploading(true);
-      const formDataToSend = new FormData();
-      formDataToSend.append('image', file);
-
-      const response = await fetch(`${API_BASE}/api/upload`, {
-        method: 'POST',
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const { url } = await response.json();
+      const url = await uploadToStorage(file);
       callback(url);
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -96,27 +86,9 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (urls: string[]) => void) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-
     try {
       setUploading(true);
-      const uploadPromises = files.map(async (file) => {
-        const formDataToSend = new FormData();
-        formDataToSend.append('image', file);
-
-        const response = await fetch(`${API_BASE}/api/upload`, {
-          method: 'POST',
-          body: formDataToSend,
-        });
-
-        if (!response.ok) {
-          throw new Error('Upload failed for ' + file.name);
-        }
-
-        const { url } = await response.json();
-        return url;
-      });
-
-      const urls = await Promise.all(uploadPromises);
+      const urls = await Promise.all(files.map(uploadToStorage));
       callback(urls);
     } catch (error) {
       console.error('Error uploading files:', error);
@@ -124,7 +96,7 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     } finally {
       setUploading(false);
     }
-  }
+  };
 
   // --- Dynamic Array Handlers ---
   const addOutfit = () => setFormData(prev => ({ ...prev, outfits: [...prev.outfits, { label: '' }] }));

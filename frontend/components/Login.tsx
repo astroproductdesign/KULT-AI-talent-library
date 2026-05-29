@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
-
-const getApiBase = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  if (url && !url.startsWith('http')) url = `https://${url}`;
-  return url;
-};
+import { supabase } from '../lib/supabaseClient.ts';
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -13,7 +8,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,16 +18,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${getApiBase()}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        onLoginSuccess();
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
+        setError('Invalid email or password.');
       } else {
-        setError(data.error || 'Invalid credentials.');
+        onLoginSuccess();
       }
     } catch {
       setError('Unable to reach server. Please try again.');
@@ -49,7 +39,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
             <Lock size={28} className="text-cyan-400" />
           </div>
         </div>
-        
+
         <h2 className="text-3xl font-black text-center mb-2 tracking-tighter">ADMIN ACCESS</h2>
         <p className="text-zinc-400 text-center mb-8 text-sm">Enter your credentials to manage the catalog.</p>
 
@@ -59,31 +49,33 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onCancel }) => {
               {error}
             </div>
           )}
-          
+
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Username</label>
-            <input 
-              type="text" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-              placeholder="Enter username"
+              placeholder="Enter email"
             />
           </div>
-          
+
           <div>
             <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
               placeholder="Enter password"
             />
           </div>
 
           <div className="pt-4 flex space-x-4">
-            <button 
+            <button
               type="button"
               onClick={onCancel}
               className="flex-1 py-3 rounded-full font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"

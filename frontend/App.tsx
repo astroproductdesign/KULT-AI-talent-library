@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './firebase.ts'; // Initialize Firebase
 import { Header } from './components/Header.tsx';
 import { Home } from './components/Home.tsx';
 import { Catalog } from './components/Catalog.tsx';
@@ -9,18 +8,7 @@ import { TalentForm } from './components/TalentForm.tsx';
 import { Login } from './components/Login.tsx';
 import { talents as initialTalents } from './data.ts';
 import { Talent } from './types.ts';
-
-// API base URL - change this to your Railway backend URL when deployed
-const getApiBase = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  // Ensure it starts with a protocol to avoid relative path issues
-  if (url && !url.startsWith('http')) {
-    url = `https://${url}`;
-  }
-  return url;
-};
-
-const API_BASE = getApiBase();
+import { supabase, toDb, fromDb } from './lib/supabaseClient.ts';
 
 type ViewState = 'home' | 'catalog' | 'detail' | 'admin' | 'form' | 'login';
 type Role = 'user' | 'admin';
@@ -28,35 +16,40 @@ type Role = 'user' | 'admin';
 export default function App() {
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [role, setRole] = useState<Role>('user');
   const [view, setView] = useState<ViewState>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [editingTalent, setEditingTalent] = useState<Talent | null>(null);
 
-  // Fetch talents from API on mount
+  // Restore session on page load
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsAuthenticated(true);
+        setRole('admin');
+      }
+    });
+  }, []);
+
+  // Fetch talents from Supabase on mount
   useEffect(() => {
     const fetchTalents = async () => {
       try {
         setLoading(true);
-        console.log('App: Fetching talents from:', API_BASE);
-        const response = await fetch(`${API_BASE}/api/talents`);
-        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-        const data = await response.json();
-        console.log('App: Successfully fetched', data.length, 'talents');
-        setTalents(data.length > 0 ? data : initialTalents);
-        setError(null);
+        const { data, error } = await supabase
+          .from('talents')
+          .select('*')
+          .order('position', { ascending: true, nullsFirst: false });
+        if (error) throw error;
+        setTalents(data && data.length > 0 ? data.map(fromDb) : initialTalents);
       } catch (err) {
-        console.warn('App: API fetch failed, falling back to initial data:', err.message);
+        console.warn('Supabase fetch failed, using local data:', err);
         setTalents(initialTalents);
-        setError(null);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTalents();
   }, []);
 
@@ -74,7 +67,6 @@ export default function App() {
   const handleLibraryClick = () => {
     if (view !== 'home') {
       setView('home');
-      // Wait for render then scroll
       setTimeout(() => {
         document.getElementById('talent-overview')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -112,7 +104,8 @@ export default function App() {
     setView('admin');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
     setRole('user');
     navigateToHome();
@@ -138,8 +131,8 @@ export default function App() {
 
   const handleDeleteTalent = async (id: string) => {
     try {
-      const response = await fetch(`${API_BASE}/api/talents/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Failed to delete talent');
+      const { error } = await supabase.from('talents').delete().eq('id', id);
+      if (error) throw error;
       setTalents(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error('Error deleting talent:', err);
@@ -148,16 +141,12 @@ export default function App() {
   };
 
   const handleReorderTalents = async (reordered: Talent[]) => {
-    // Optimistically update local state immediately
     setTalents(reordered);
-    // Persist new order to Supabase
     try {
-      const order = reordered.map((t, i) => ({ id: t.id, position: i }));
-      await fetch(`${API_BASE}/api/reorder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order }),
-      });
+      const updates = reordered.map((t, i) =>
+        supabase.from('talents').update({ position: i }).eq('id', t.id)
+      );
+      await Promise.all(updates);
     } catch (err) {
       console.error('Failed to persist talent order:', err);
     }
@@ -166,27 +155,24 @@ export default function App() {
   const handleSaveTalent = async (savedTalent: Talent) => {
     try {
       if (editingTalent) {
-        // Update existing talent
-        const response = await fetch(`${API_BASE}/api/talents/${editingTalent.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(savedTalent),
-        });
-        if (!response.ok) throw new Error('Failed to update talent');
+        const { error } = await supabase
+          .from('talents')
+          .upsert(toDb(savedTalent));
+        if (error) throw error;
         setTalents(prev => prev.map(t => t.id === editingTalent.id ? savedTalent : t));
       } else {
-        // Create new talent
-        const response = await fetch(`${API_BASE}/api/talents`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(savedTalent),
-        });
-        if (!response.ok) throw new Error('Failed to create talent');
-        const newTalent = await response.json();
-        setTalents(prev => [...prev, newTalent]);
+        const { count } = await supabase
+          .from('talents')
+          .select('*', { count: 'exact', head: true });
+        const { data, error } = await supabase
+          .from('talents')
+          .insert(toDb({ ...savedTalent, position: count ?? 0 }))
+          .select()
+          .single();
+        if (error) throw error;
+        setTalents(prev => [...prev, fromDb(data)]);
       }
-      
-      // If we were editing a specific talent from the detail view, go back to detail view
+
       if (selectedTalentId === savedTalent.id) {
         setView('detail');
       } else {
@@ -217,9 +203,9 @@ export default function App() {
         const selectedTalent = talents.find(t => t.id === selectedTalentId);
         if (!selectedTalent) return <Home onSelectTalent={handleSelectTalent} talents={talents} onSeeMore={navigateToCatalog} />;
         return (
-          <TalentDetail 
-            talent={selectedTalent} 
-            onBack={navigateToHome} 
+          <TalentDetail
+            talent={selectedTalent}
+            onBack={navigateToHome}
             isAdmin={role === 'admin' && isAuthenticated}
             onEdit={() => handleEditTalentClick(selectedTalent)}
           />
@@ -241,7 +227,7 @@ export default function App() {
       case 'form':
         if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} onCancel={navigateToHome} />;
         return (
-          <TalentForm 
+          <TalentForm
             initialData={editingTalent}
             onSave={handleSaveTalent}
             onCancel={() => {
@@ -260,8 +246,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-kult-black text-white font-sans selection:bg-cyan-500/30">
-      <Header 
-        onLogoClick={navigateToHome} 
+      <Header
+        onLogoClick={navigateToHome}
         onLibraryClick={handleLibraryClick}
         role={role}
         isAuthenticated={isAuthenticated}
