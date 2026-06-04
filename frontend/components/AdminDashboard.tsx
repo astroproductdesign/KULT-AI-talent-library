@@ -147,7 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <td className="p-6">
                         <div className="flex items-center space-x-4">
                           <img
-                            src={talent.profileImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_profile/100/100`}
+                            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`}
                             alt={talent.name}
                             className="w-12 h-12 rounded-full object-cover border border-zinc-700"
                           />

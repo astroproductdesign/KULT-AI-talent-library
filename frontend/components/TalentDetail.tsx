@@ -50,7 +50,6 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
   const getMainImg = () => talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_main/600/800`;
   const getTurnaroundImg = (idx: number) => talent.turnaroundUrls?.[idx] || `https://picsum.photos/seed/${talent.imageSeed}_turn_${idx}/400/800`;
   const getExpressionImg = (idx: number) => talent.expressionUrls?.[idx] || `https://picsum.photos/seed/${talent.imageSeed}_exp_${idx}/500/500`;
-  const getCloseupImg = () => talent.closeupUrl || `https://picsum.photos/seed/${talent.imageSeed}_closeup/600/800`;
 
   return (
     <div className="min-h-screen bg-kult-black pb-24">
@@ -178,16 +177,6 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
                       <div className="absolute bottom-4 left-4 text-xs bg-black/50 px-3 py-1.5 rounded-full text-white font-bold uppercase tracking-wider">Expression Sheet</div>
                     </div>
                     
-                    <div 
-                      className="lg:col-span-1 aspect-[3/4] bg-zinc-800 rounded-xl overflow-hidden relative cursor-zoom-in group/img"
-                      onClick={() => setModalImage({ url: getCloseupImg(), alt: `${talent.name} - Close-up` })}
-                    >
-                      <img src={getCloseupImg()} alt="Close-up" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                        <Maximize2 size={24} className="text-white" />
-                      </div>
-                      <div className="absolute top-4 left-4 text-sm font-bold bg-black/50 px-3 py-1 rounded text-white uppercase tracking-wider">Close-Up</div>
-                    </div>
                   </div>
                 </div>
               )}

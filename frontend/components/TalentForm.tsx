@@ -310,22 +310,15 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
               
               {/* Core Images */}
               <div>
-                <h3 className="text-lg font-bold mb-4 border-b border-zinc-800 pb-2">Core Profile Images</h3>
+                <h3 className="text-lg font-bold mb-4 border-b border-zinc-800 pb-2">Core Profile Image</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className={labelClass}>Profile Avatar (1:1)</label>
-                    <FileUploadBtn 
-                      label="Upload Avatar" accept="image/*" 
-                      previewUrl={formData.profileImageUrl}
-                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, profileImageUrl: url })))} 
-                    />
-                  </div>
-                  <div>
                     <label className={labelClass}>Main Card Image (3:4)</label>
-                    <FileUploadBtn 
-                      label="Upload Main Image" accept="image/*" 
+                    <p className="text-xs text-zinc-500 mb-3">Used as the talent card, avatar, and all profile appearances across the site.</p>
+                    <FileUploadBtn
+                      label="Upload Main Image" accept="image/*"
                       previewUrl={formData.mainImageUrl}
-                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, mainImageUrl: url })))} 
+                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, mainImageUrl: url, profileImageUrl: url })))}
                     />
                   </div>
                 </div>
@@ -349,14 +342,6 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                       label="Upload Expressions" accept="image/*" 
                       previewUrl={formData.expressionUrls?.[0]}
                       onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, expressionUrls: [url] })))} 
-                    />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Close-up Image</label>
-                    <FileUploadBtn 
-                      label="Upload Close-up" accept="image/*" 
-                      previewUrl={formData.closeupUrl}
-                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, closeupUrl: url })))} 
                     />
                   </div>
                 </div>

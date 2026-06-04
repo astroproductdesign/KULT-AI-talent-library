@@ -80,7 +80,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
       <td className="py-6">
         <div className="flex items-center space-x-4">
           <img 
-            src={talent.profileImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_profile/100/100`} 
+            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
             alt={talent.name} 
             className="w-12 h-12 rounded-full object-cover border border-zinc-700"
           />
@@ -176,13 +176,13 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
                           onClick={(e) => {
                             e.stopPropagation();
                             setModalImage({ 
-                              url: talent.profileImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_profile/100/100`, 
+                              url: talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`, 
                               alt: talent.name 
                             });
                           }}
                         >
                           <img 
-                            src={talent.profileImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_profile/100/100`} 
+                            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
                             alt={talent.name} 
                             className="w-12 h-12 rounded-full object-cover border border-zinc-700 transition-transform group-hover/img:scale-110"
                           />
@@ -239,7 +239,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
                           <td className="py-4">
                             <div className="flex items-center space-x-4">
                               <img 
-                                src={talent.profileImageUrl || `https://picsum.photos/seed/${talent.imageSeed}_profile/100/100`} 
+                                src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
                                 alt={talent.name} 
                                 className="w-10 h-10 rounded-full object-cover border border-zinc-700"
                               />
