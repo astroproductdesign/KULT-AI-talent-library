@@ -10,7 +10,7 @@ interface TalentDetailProps {
   onEdit?: () => void;
 }
 
-type Tab = 'turnaround' | 'expressions' | 'outfits' | 'voices' | 'usecases';
+type Tab = 'turnaround' | 'outfits' | 'voices' | 'usecases';
 
 export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAdmin, onEdit }) => {
   const [activeTab, setActiveTab] = useState<Tab>('turnaround');
@@ -19,8 +19,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
   const audioRefs = useRef<{ [key: number]: HTMLAudioElement | null }>({});
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'turnaround', label: 'Turnaround Views' },
-    { id: 'expressions', label: 'Expressions' },
+    { id: 'turnaround', label: 'Views & Expressions' },
     { id: 'outfits', label: 'Outfits' },
     { id: 'voices', label: 'Voice Acting' },
   ];
@@ -148,26 +147,26 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
             <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-8 min-h-[600px]">
               
               {activeTab === 'turnaround' && (
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">{talent.name} - Turnaround Views</h3>
-                  <div 
-                    className="aspect-video bg-zinc-800 rounded-xl overflow-hidden cursor-zoom-in relative group/img"
-                    onClick={() => setModalImage({ url: getTurnaroundImg(0), alt: `${talent.name} - Turnaround View` })}
-                  >
-                    <img src={getTurnaroundImg(0)} alt="Turnaround" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                      <Maximize2 size={32} className="text-white" />
+                <div className="space-y-10">
+                  {/* Turnaround Views */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold uppercase tracking-wide">Turnaround Views</h3>
+                    <div
+                      className="aspect-video bg-zinc-800 rounded-xl overflow-hidden cursor-zoom-in relative group/img"
+                      onClick={() => setModalImage({ url: getTurnaroundImg(0), alt: `${talent.name} - Turnaround View` })}
+                    >
+                      <img src={getTurnaroundImg(0)} alt="Turnaround" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                        <Maximize2 size={32} className="text-white" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {activeTab === 'expressions' && (
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">{talent.name} - Expression Sample</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div 
-                      className="lg:col-span-2 aspect-video bg-zinc-800 rounded-xl overflow-hidden relative cursor-zoom-in group/img"
+                  {/* Expression Sample */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold uppercase tracking-wide">Expression Sample</h3>
+                    <div
+                      className="aspect-video bg-zinc-800 rounded-xl overflow-hidden cursor-zoom-in relative group/img"
                       onClick={() => setModalImage({ url: getExpressionImg(0), alt: `${talent.name} - Expressions` })}
                     >
                       <img src={getExpressionImg(0)} alt="Expressions" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
@@ -176,14 +175,13 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
                       </div>
                       <div className="absolute bottom-4 left-4 text-xs bg-black/50 px-3 py-1.5 rounded-full text-white font-bold uppercase tracking-wider">Expression Sheet</div>
                     </div>
-                    
                   </div>
                 </div>
               )}
 
               {activeTab === 'outfits' && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">{talent.name} - Outfit Variations</h3>
+                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">Outfit Variations</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {talent.outfits.map((outfit, idx) => (
                       <div key={idx} className="space-y-3">
@@ -212,7 +210,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
 
               {activeTab === 'voices' && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">{talent.name} - Voice Acting</h3>
+                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">Voice Acting</h3>
                   <div className="flex flex-wrap gap-8">
                     {talent.voices.map((voice, idx) => (
                       <div key={idx} className="flex flex-col items-center space-y-4">
@@ -250,7 +248,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
 
               {activeTab === 'usecases' && talent.useCases && (
                 <div className="space-y-12">
-                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">{talent.name} - Use Cases</h3>
+                  <h3 className="text-xl font-bold uppercase tracking-wide mb-6">Use Cases</h3>
                   {talent.useCases.map((useCase, idx) => (
                     <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-b border-zinc-800/50 pb-12 last:border-0 last:pb-0">
                       <div 
