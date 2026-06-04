@@ -151,7 +151,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             alt={talent.name}
                             className="w-12 h-12 rounded-full object-cover border border-zinc-700"
                           />
-                          <span className="font-bold text-white">{talent.name}</span>
+                          <span className="font-bold uppercase text-white">{talent.name}</span>
                         </div>
                       </td>
                       <td className="p-6 font-mono text-sm text-zinc-400">{talent.id}</td>

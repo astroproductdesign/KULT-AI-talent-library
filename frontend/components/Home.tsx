@@ -108,7 +108,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
               </div>
               <div className="p-6 flex-1 flex flex-col">
                 <div className="text-xs font-mono text-zinc-500 mb-2">{talent.id}</div>
-                <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors mb-2">{talent.name}</h3>
+                <h3 className="text-xl font-bold uppercase text-white group-hover:text-cyan-400 transition-colors mb-2">{talent.name}</h3>
                 <p className="text-sm text-zinc-400 line-clamp-2 mt-auto">
                   {talent.bestFit.join(', ')}
                 </p>

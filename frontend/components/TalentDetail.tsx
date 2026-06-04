@@ -15,7 +15,7 @@ type Tab = 'turnaround' | 'outfits' | 'voices' | 'usecases';
 export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAdmin, onEdit }) => {
   const [activeTab, setActiveTab] = useState<Tab>('turnaround');
   const [playingAudio, setPlayingAudio] = useState<number | null>(null);
-  const [modalImage, setModalImage] = useState<{ url: string, alt: string } | null>(null);
+  const [modalImage, setModalImage] = useState<{ url: string; alt: string; images?: Array<{ url: string; alt: string }>; initialIndex?: number } | null>(null);
   const audioRefs = useRef<{ [key: number]: HTMLAudioElement | null }>({});
 
   const tabs: { id: Tab; label: string }[] = [
@@ -95,22 +95,22 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div>
                   <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Age Range</div>
-                  <div className="font-medium text-lg">{talent.ageRange}</div>
+                  <div className="font-medium text-base">{talent.ageRange}</div>
                 </div>
                 <div>
                   <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Gender</div>
-                  <div className="font-medium text-lg">{talent.gender === 'M' ? 'Male' : 'Female'}</div>
+                  <div className="font-medium text-base">{talent.gender === 'M' ? 'Male' : 'Female'}</div>
                 </div>
                 <div className="col-span-2">
                   <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Ethnicity</div>
-                  <div className="font-medium text-lg">{talent.ethnicity}</div>
+                  <div className="font-medium text-base">{talent.ethnicity}</div>
                 </div>
               </div>
 
               <div className="mb-8">
                 <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Brand Personality Fit</div>
-                <div className="font-medium text-lg leading-snug">
-                  {talent.personality.join(', ').toUpperCase()}
+                <div className="font-medium text-base leading-snug">
+                  {talent.personality.join(', ')}
                 </div>
               </div>
 
@@ -120,7 +120,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
                   {talent.bestFit.map((fit, idx) => (
                     <li key={idx} className="flex items-start space-x-3">
                       <Check size={18} className="text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <span className="font-medium uppercase tracking-wide text-sm">{fit}</span>
+                      <span className="font-medium text-base">{fit}</span>
                     </li>
                   ))}
                 </ul>
@@ -182,29 +182,39 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
               {activeTab === 'outfits' && (
                 <div className="space-y-6">
                   <h3 className="text-xl font-bold uppercase tracking-wide mb-6">Outfit Variations</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {talent.outfits.map((outfit, idx) => (
-                      <div key={idx} className="space-y-3">
-                        <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider text-center">{outfit.label}</div>
-                        <div 
-                          className="aspect-[1/2] bg-zinc-800 rounded-lg overflow-hidden cursor-zoom-in relative group/img"
-                          onClick={() => setModalImage({ 
-                            url: outfit.imageUrl || `https://picsum.photos/seed/${talent.imageSeed}_outfit_${idx}/400/800`, 
-                            alt: `${talent.name} - ${outfit.label}` 
-                          })}
-                        >
-                          <img 
-                            src={outfit.imageUrl || `https://picsum.photos/seed/${talent.imageSeed}_outfit_${idx}/400/800`} 
-                            alt={outfit.label}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                            <Maximize2 size={24} className="text-white" />
+                  {(() => {
+                    const uploadedOutfits = talent.outfits.filter(o => o.imageUrl);
+                    const gallery = uploadedOutfits.map(o => ({ url: o.imageUrl!, alt: o.label }));
+                    return uploadedOutfits.length === 0 ? (
+                      <p className="text-zinc-500 italic text-sm">No data found.</p>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {uploadedOutfits.map((outfit, idx) => (
+                          <div key={idx} className="space-y-3">
+                            <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider text-center">{outfit.label}</div>
+                            <div
+                              className="aspect-[1/2] bg-zinc-800 rounded-lg overflow-hidden cursor-zoom-in relative group/img"
+                              onClick={() => setModalImage({
+                                url: outfit.imageUrl!,
+                                alt: outfit.label,
+                                images: gallery,
+                                initialIndex: idx,
+                              })}
+                            >
+                              <img
+                                src={outfit.imageUrl}
+                                alt={outfit.label}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                <Maximize2 size={24} className="text-white" />
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -284,10 +294,12 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
       </div>
       {/* Image Modal */}
       {modalImage && (
-        <ImageModal 
-          imageUrl={modalImage.url} 
-          altText={modalImage.alt} 
-          onClose={() => setModalImage(null)} 
+        <ImageModal
+          imageUrl={modalImage.url}
+          altText={modalImage.alt}
+          onClose={() => setModalImage(null)}
+          images={modalImage.images}
+          initialIndex={modalImage.initialIndex}
         />
       )}
     </div>

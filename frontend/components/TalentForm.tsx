@@ -18,6 +18,14 @@ interface TalentFormProps {
   onCancel: () => void;
 }
 
+const DEFAULT_OUTFITS = [
+  { label: 'Base Look' },
+  { label: 'Casual' },
+  { label: 'Business' },
+  { label: 'Formal' },
+  { label: 'Festive' },
+];
+
 const defaultTalent: Talent = {
   id: '',
   name: '',
@@ -26,7 +34,7 @@ const defaultTalent: Talent = {
   ageRange: '',
   personality: [],
   bestFit: [],
-  outfits: [],
+  outfits: DEFAULT_OUTFITS,
   voices: [],
   imageSeed: Math.random().toString(36).substring(7),
   useCases: [],

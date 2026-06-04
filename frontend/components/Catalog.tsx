@@ -190,7 +190,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
                             <Maximize2 size={14} className="text-white" />
                           </div>
                         </div>
-                        <span className="font-bold text-lg text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
+                        <span className="font-bold text-lg uppercase text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
                       </div>
                     </td>
                     <td className="p-6">{talent.ethnicity}</td>
@@ -243,7 +243,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
                                 alt={talent.name} 
                                 className="w-10 h-10 rounded-full object-cover border border-zinc-700"
                               />
-                              <span className="font-bold text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
+                              <span className="font-bold uppercase text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
                             </div>
                           </td>
                           <td className="py-4 text-sm text-zinc-400">{talent.bestFit.join(', ')}</td>
