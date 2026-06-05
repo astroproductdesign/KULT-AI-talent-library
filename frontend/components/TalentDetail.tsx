@@ -130,7 +130,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
 
           {/* Right Column: Tabs & Content */}
           <div className="lg:col-span-8">
-            <div className="flex overflow-x-auto space-x-8 border-b border-zinc-800 mb-8 pb-4 scrollbar-hide">
+            <div className="flex space-x-8 border-b border-zinc-800 mb-8 pb-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -144,7 +144,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
               ))}
             </div>
 
-            <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-8 min-h-[600px]">
+            <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-8">
               
               {activeTab === 'turnaround' && (
                 <div className="space-y-10">
