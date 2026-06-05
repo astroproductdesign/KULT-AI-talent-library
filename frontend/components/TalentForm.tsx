@@ -239,6 +239,10 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
             <div className={activeTab === 'basic' ? 'block space-y-8' : 'hidden'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <label className={labelClass}>Full Name</label>
+                  <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Sarah Chen" className={inputClass} />
+                </div>
+                <div>
                   <label className={labelClass}>
                     Talent ID
                     <span className="ml-2 text-zinc-500 normal-case font-normal tracking-normal">— auto-generated from ethnicity, gender &amp; name</span>
@@ -247,15 +251,11 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                     type="text"
                     name="id"
                     value={formData.id}
-                    readOnly
+                    disabled
                     placeholder="Select ethnicity and gender below"
                     required
                     className={`${inputClass} opacity-60 cursor-not-allowed select-none bg-zinc-900 font-mono tracking-widest text-cyan-400`}
                   />
-                </div>
-                <div>
-                  <label className={labelClass}>Full Name</label>
-                  <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Sarah Chen" className={inputClass} />
                 </div>
               </div>
 
