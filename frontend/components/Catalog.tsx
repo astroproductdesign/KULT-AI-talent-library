@@ -26,7 +26,6 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
   };
 
   const filteredAndSortedTalents = useMemo(() => {
-    // 1. Filter
     let result = talents.filter(talent => {
       if (!searchTerm) return true;
       const lowerTerm = searchTerm.toLowerCase();
@@ -40,7 +39,6 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
       );
     });
 
-    // 2. Sort
     if (sortConfig) {
       result.sort((a, b) => {
         let aValue: string = '';
@@ -64,141 +62,114 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
   }, [talents, searchTerm, sortConfig]);
 
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={14} className="text-zinc-600 ml-2 inline-block" />;
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp size={14} className="text-cyan-400 ml-2 inline-block" />
-      : <ChevronDown size={14} className="text-cyan-400 ml-2 inline-block" />;
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={13} className="text-wf-mute-soft ml-1.5 inline-block" />;
+    return sortConfig.direction === 'asc'
+      ? <ChevronUp size={13} className="text-wf-ink ml-1.5 inline-block" />
+      : <ChevronDown size={13} className="text-wf-ink ml-1.5 inline-block" />;
   };
 
-  const renderTalentRow = (talent: Talent) => (
-    <tr 
-      key={talent.id} 
-      className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors group cursor-pointer"
-      onClick={() => onSelectTalent(talent.id)}
-    >
-      <td className="py-6 font-mono text-sm">{talent.id}</td>
-      <td className="py-6">
-        <div className="flex items-center space-x-4">
-          <img 
-            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
-            alt={talent.name} 
-            className="w-12 h-12 rounded-full object-cover border border-zinc-700"
-          />
-          <span className="font-bold text-lg text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
-        </div>
-      </td>
-      <td className="py-6">{talent.ethnicity}</td>
-      <td className="py-6">{talent.gender}</td>
-      <td className="py-6 text-sm text-zinc-400 max-w-xs">{talent.bestFit.join(', ')}</td>
-      <td className="py-6 text-right">
-        <button className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 group-hover:bg-white group-hover:text-black transition-all">
-          <ArrowRight size={18} />
-        </button>
-      </td>
-    </tr>
-  );
-
   return (
-    <div className="min-h-screen bg-kult-black pb-24">
-      <section className="max-w-7xl mx-auto px-6 py-8">
-        <button 
+    <div className="min-h-screen bg-wf-canvas pb-24">
+      <section className="max-w-[1440px] mx-auto px-8 py-10">
+        <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors mb-8"
+          className="flex items-center space-x-2 text-wf-mute hover:text-wf-ink transition-colors mb-10 text-sm font-medium"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
           <span>Back to Home</span>
         </button>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
           <div>
-            <h1 className="text-4xl font-black tracking-tighter mb-2">FULL CATALOG</h1>
-            <p className="text-zinc-400">Browse and search through all available AI personas.</p>
+            <p className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">Catalog</p>
+            <h1 className="text-[44px] font-semibold text-wf-ink tracking-[-0.5px] leading-[46px] mb-2">Full Catalog</h1>
+            <p className="text-wf-body text-[15px]">Browse and search through all available AI personas.</p>
           </div>
-          
+
           {/* Search Bar */}
           <div className="relative w-full md:w-96">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search size={18} className="text-zinc-500" />
+              <Search size={16} className="text-wf-mute" />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, ethnicity, vibe..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-3 pl-12 pr-10 text-sm text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
+              placeholder="Search by name, ethnicity, vibe…"
+              className="w-full bg-wf-canvas border border-wf-hairline rounded-[4px] py-3 pl-11 pr-10 text-[14px] text-wf-ink placeholder-wf-mute-soft focus:outline-none focus:border-wf-ink transition-colors"
             />
             {searchTerm && (
-              <button 
+              <button
                 onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-white transition-colors"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-wf-mute hover:text-wf-ink transition-colors"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             )}
           </div>
         </div>
-        
+
         {filteredAndSortedTalents.length > 0 ? (
-          <div className="overflow-x-auto bg-zinc-900/30 border border-zinc-800 rounded-2xl">
+          <div className="overflow-x-auto bg-wf-canvas border border-wf-hairline rounded-[8px] shadow-wf-2">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900/80 text-sm uppercase tracking-wider text-zinc-500 select-none">
-                  <th className="p-6 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('id')}>
+                <tr className="border-b border-wf-hairline bg-gray-50 text-[11px] font-medium uppercase tracking-[1.5px] text-wf-mute select-none">
+                  <th className="px-6 py-4 cursor-pointer hover:text-wf-ink transition-colors" onClick={() => handleSort('id')}>
                     Talent ID <SortIcon columnKey="id" />
                   </th>
-                  <th className="p-6 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                  <th className="px-6 py-4 cursor-pointer hover:text-wf-ink transition-colors" onClick={() => handleSort('name')}>
                     Name <SortIcon columnKey="name" />
                   </th>
-                  <th className="p-6 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('ethnicity')}>
+                  <th className="px-6 py-4 cursor-pointer hover:text-wf-ink transition-colors" onClick={() => handleSort('ethnicity')}>
                     Ethnicity <SortIcon columnKey="ethnicity" />
                   </th>
-                  <th className="p-6 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('gender')}>
+                  <th className="px-6 py-4 cursor-pointer hover:text-wf-ink transition-colors" onClick={() => handleSort('gender')}>
                     Gender <SortIcon columnKey="gender" />
                   </th>
-                  <th className="p-6 font-medium cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('bestFit')}>
+                  <th className="px-6 py-4 cursor-pointer hover:text-wf-ink transition-colors" onClick={() => handleSort('bestFit')}>
                     Best For <SortIcon columnKey="bestFit" />
                   </th>
-                  <th className="p-6 font-medium text-right">Action</th>
+                  <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-zinc-300 divide-y divide-zinc-800/50">
+              <tbody className="text-wf-body divide-y divide-wf-hairline">
                 {filteredAndSortedTalents.map((talent) => (
-                  <tr 
-                    key={talent.id} 
-                    className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                  <tr
+                    key={talent.id}
+                    className="hover:bg-gray-50 transition-colors group cursor-pointer"
                     onClick={() => onSelectTalent(talent.id)}
                   >
-                    <td className="p-6 font-mono text-sm">{talent.id}</td>
-                    <td className="p-6">
+                    <td className="px-6 py-5 font-mono text-[13px] text-wf-mute">{talent.id}</td>
+                    <td className="px-6 py-5">
                       <div className="flex items-center space-x-4">
-                        <div 
-                          className="relative group/img cursor-zoom-in"
+                        <div
+                          className="relative group/img cursor-zoom-in flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setModalImage({ 
-                              url: talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`, 
-                              alt: talent.name 
+                            setModalImage({
+                              url: talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`,
+                              alt: talent.name
                             });
                           }}
                         >
-                          <img 
-                            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
-                            alt={talent.name} 
-                            className="w-12 h-12 rounded-full object-cover border border-zinc-700 transition-transform group-hover/img:scale-110"
+                          <img
+                            src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`}
+                            alt={talent.name}
+                            className="w-11 h-11 rounded-full object-cover border border-wf-hairline transition-transform group-hover/img:scale-110"
                           />
-                          <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                            <Maximize2 size={14} className="text-white" />
+                          <div className="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                            <Maximize2 size={12} className="text-white" />
                           </div>
                         </div>
-                        <span className="font-bold text-lg uppercase text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
+                        <span className="font-semibold text-[15px] uppercase text-wf-ink group-hover:opacity-60 transition-opacity">{talent.name}</span>
                       </div>
                     </td>
-                    <td className="p-6">{talent.ethnicity}</td>
-                    <td className="p-6">{talent.gender}</td>
-                    <td className="p-6 text-sm text-zinc-400 max-w-xs">{talent.bestFit.join(', ')}</td>
-                    <td className="p-6 text-right">
-                      <button className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 group-hover:bg-white group-hover:text-black transition-all">
-                        <ArrowRight size={18} />
+                    <td className="px-6 py-5 text-[14px]">{talent.ethnicity}</td>
+                    <td className="px-6 py-5 text-[14px]">{talent.gender}</td>
+                    <td className="px-6 py-5 text-[14px] text-wf-body-mid max-w-xs">{talent.bestFit.join(', ')}</td>
+                    <td className="px-6 py-5 text-right">
+                      <button className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-wf-hairline text-wf-mute group-hover:bg-wf-ink group-hover:text-white group-hover:border-wf-ink transition-all">
+                        <ArrowRight size={16} />
                       </button>
                     </td>
                   </tr>
@@ -207,16 +178,16 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
             </table>
           </div>
         ) : (
-          <div className="py-16 bg-zinc-900/30 border border-zinc-800 rounded-2xl">
+          <div className="py-16 bg-wf-canvas border border-wf-hairline rounded-[8px]">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 mb-4">
-                <Search size={24} className="text-zinc-500" />
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full border border-wf-hairline mb-4">
+                <Search size={22} className="text-wf-mute" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">No matches found</h3>
-              <p className="text-zinc-400">Your search "{searchTerm}" did not match any AI talent.</p>
-              <button 
+              <h3 className="text-[20px] font-semibold text-wf-ink mb-2">No matches found</h3>
+              <p className="text-wf-body text-[15px]">Your search "{searchTerm}" did not match any AI talent.</p>
+              <button
                 onClick={() => setSearchTerm('')}
-                className="mt-6 text-cyan-400 hover:text-cyan-300 text-sm font-bold uppercase tracking-wider transition-colors"
+                className="mt-6 text-wf-ink hover:opacity-60 text-sm font-medium underline underline-offset-2 transition-opacity"
               >
                 Clear Search
               </button>
@@ -225,30 +196,30 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
             {/* Suggestions */}
             {talents.length > 0 && (
               <div className="px-8">
-                <h4 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-6 border-b border-zinc-800 pb-2">Suggested Talents</h4>
+                <h4 className="text-[11px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-6 border-b border-wf-hairline pb-3">Suggested Talents</h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <tbody className="text-zinc-300 divide-y divide-zinc-800/50">
+                    <tbody className="text-wf-body divide-y divide-wf-hairline">
                       {talents.slice(0, 3).map((talent) => (
-                        <tr 
-                          key={talent.id} 
-                          className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                        <tr
+                          key={talent.id}
+                          className="hover:bg-gray-50 transition-colors group cursor-pointer"
                           onClick={() => onSelectTalent(talent.id)}
                         >
-                          <td className="py-4 font-mono text-sm">{talent.id}</td>
+                          <td className="py-4 font-mono text-[13px] text-wf-mute">{talent.id}</td>
                           <td className="py-4">
                             <div className="flex items-center space-x-4">
-                              <img 
-                                src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`} 
-                                alt={talent.name} 
-                                className="w-10 h-10 rounded-full object-cover border border-zinc-700"
+                              <img
+                                src={talent.mainImageUrl || `https://picsum.photos/seed/${talent.imageSeed}/100/100`}
+                                alt={talent.name}
+                                className="w-10 h-10 rounded-full object-cover border border-wf-hairline"
                               />
-                              <span className="font-bold uppercase text-white group-hover:text-cyan-400 transition-colors">{talent.name}</span>
+                              <span className="font-semibold uppercase text-wf-ink group-hover:opacity-60 transition-opacity">{talent.name}</span>
                             </div>
                           </td>
-                          <td className="py-4 text-sm text-zinc-400">{talent.bestFit.join(', ')}</td>
+                          <td className="py-4 text-[14px] text-wf-body-mid">{talent.bestFit.join(', ')}</td>
                           <td className="py-4 text-right">
-                            <ArrowRight size={16} className="inline-block text-zinc-500 group-hover:text-white transition-colors" />
+                            <ArrowRight size={15} className="inline-block text-wf-mute group-hover:text-wf-ink transition-colors" />
                           </td>
                         </tr>
                       ))}
@@ -263,10 +234,10 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
 
       {/* Image Modal */}
       {modalImage && (
-        <ImageModal 
-          imageUrl={modalImage.url} 
-          altText={modalImage.alt} 
-          onClose={() => setModalImage(null)} 
+        <ImageModal
+          imageUrl={modalImage.url}
+          altText={modalImage.alt}
+          onClose={() => setModalImage(null)}
         />
       )}
     </div>

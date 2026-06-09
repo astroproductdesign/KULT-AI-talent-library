@@ -1,84 +1,135 @@
-import React from 'react';
-import { Shield, UserCircle, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { LogOut, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
   onLogoClick: () => void;
   onLibraryClick: () => void;
-  role: 'user' | 'admin';
   isAuthenticated: boolean;
-  onRoleSelect: (role: 'user' | 'admin') => void;
+  onLoginClick: () => void;
   onAdminClick: () => void;
   onLogout: () => void;
+  currentView?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  onLogoClick, 
+export const Header: React.FC<HeaderProps> = ({
+  onLogoClick,
   onLibraryClick,
-  role, 
-  isAuthenticated, 
-  onRoleSelect, 
+  isAuthenticated,
+  onLoginClick,
   onAdminClick,
-  onLogout
+  onLogout,
+  currentView,
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isLibraryActive = !currentView || ['home', 'catalog', 'detail'].includes(currentView);
+  const isDashboardActive = currentView === 'admin' || currentView === 'form';
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
-    <header className="sticky top-0 z-50 bg-kult-black/90 backdrop-blur-md border-b border-zinc-800">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center space-x-8">
-          <div 
-            className="text-4xl font-black tracking-tighter cursor-pointer hover:text-gray-300 transition-colors"
-            onClick={onLogoClick}
+    <header className="sticky top-0 z-50 bg-wf-canvas border-b border-wf-hairline">
+      <div className="max-w-[1440px] mx-auto px-8 h-16 flex items-center justify-between">
+
+        {/* Hamburger (mobile) + Logo + Desktop Nav */}
+        <div className="flex items-center space-x-3 md:space-x-10">
+          {/* Hamburger — mobile only, leftmost */}
+          <button
+            onClick={() => setMobileMenuOpen(o => !o)}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-[4px] border border-wf-hairline text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+          </button>
+
+          <div
+            className="text-xl font-semibold tracking-tight text-wf-ink cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={() => { onLogoClick(); closeMobileMenu(); }}
           >
             KULT
           </div>
-          <nav className="hidden md:flex space-x-6 text-sm font-medium text-zinc-400">
-            <button onClick={onLibraryClick} className="hover:text-white transition-colors">Library</button>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center space-x-7 h-full">
+            <button
+              onClick={onLibraryClick}
+              className={`text-sm font-medium transition-colors border-b-2 pb-[1px] ${
+                isLibraryActive
+                  ? 'text-wf-ink border-wf-ink'
+                  : 'text-wf-mute border-transparent hover:text-wf-ink'
+              }`}
+            >
+              Library
+            </button>
             {isAuthenticated && (
-              <button onClick={onAdminClick} className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center space-x-1">
-                <Shield size={14} />
-                <span>Dashboard</span>
+              <button
+                onClick={onAdminClick}
+                className={`text-sm font-medium transition-colors border-b-2 pb-[1px] ${
+                  isDashboardActive
+                    ? 'text-wf-ink border-wf-ink'
+                    : 'text-wf-mute border-transparent hover:text-wf-ink'
+                }`}
+              >
+                Dashboard
               </button>
             )}
           </nav>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Right side */}
+        <div className="flex items-center space-x-3">
           {isAuthenticated ? (
-            <div className="flex items-center space-x-4">
-              <span className="hidden md:inline-block text-xs font-bold text-cyan-400 uppercase tracking-wider">Admin Active</span>
+            <div className="flex items-center space-x-3">
+              <span className="hidden md:inline-block text-xs font-medium text-wf-mute uppercase tracking-[1.5px]">
+                Admin
+              </span>
               <button
                 onClick={onLogout}
-                className="flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium bg-zinc-800 text-white hover:bg-zinc-700 transition-all"
+                className="flex items-center space-x-2 px-4 py-2 border border-wf-hairline rounded-[4px] text-sm font-medium text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors"
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
                 <span>Logout</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center bg-zinc-900 rounded-full p-1 border border-zinc-800">
-              <button
-                onClick={() => onRoleSelect('user')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  role === 'user' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                <UserCircle size={16} />
-                <span>User</span>
-              </button>
-              <button
-                onClick={() => onRoleSelect('admin')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  role === 'admin' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                <Shield size={16} />
-                <span>Admin</span>
-              </button>
-            </div>
+            <button
+              onClick={() => { onLoginClick(); closeMobileMenu(); }}
+              className="px-4 py-2 border border-wf-hairline rounded-[4px] text-sm font-medium text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors"
+            >
+              Login
+            </button>
           )}
         </div>
       </div>
-      {/* Gradient Bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-pink-500 via-cyan-400 to-orange-400"></div>
+
+      {/* Mobile dropdown menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-wf-hairline bg-wf-canvas">
+          <nav className="max-w-[1440px] mx-auto px-8 py-4 flex flex-col space-y-1">
+            <button
+              onClick={() => { onLibraryClick(); closeMobileMenu(); }}
+              className={`w-full text-left px-4 py-3 rounded-[4px] text-sm font-medium transition-colors ${
+                isLibraryActive
+                  ? 'bg-gray-50 text-wf-ink'
+                  : 'text-wf-mute hover:text-wf-ink hover:bg-gray-50'
+              }`}
+            >
+              Library
+            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => { onAdminClick(); closeMobileMenu(); }}
+                className={`w-full text-left px-4 py-3 rounded-[4px] text-sm font-medium transition-colors ${
+                  isDashboardActive
+                    ? 'bg-gray-50 text-wf-ink'
+                    : 'text-wf-mute hover:text-wf-ink hover:bg-gray-50'
+                }`}
+              >
+                Dashboard
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

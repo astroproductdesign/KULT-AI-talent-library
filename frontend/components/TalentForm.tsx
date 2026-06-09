@@ -49,11 +49,9 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   const [activeTab, setActiveTab] = useState<FormTab>('basic');
   const [uploading, setUploading] = useState(false);
 
-  // Local states for comma-separated inputs to allow spaces/commas while typing
   const [personalityStr, setPersonalityStr] = useState(formData.personality.join(', '));
   const [bestFitStr, setBestFitStr] = useState(formData.bestFit.join(', '));
 
-  // Age range: single base age input, auto-calculates +5 range
   const parseBaseAge = (range: string) => range.match(/\d+/)?.[0] ?? '';
   const [baseAge, setBaseAge] = useState<string>(parseBaseAge(formData.ageRange));
   const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +61,6 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     setFormData(prev => ({ ...prev, ageRange: !isNaN(num) ? `${num} - ${num + 5}` : '' }));
   };
 
-  // Auto-generate ID from ethnicity + gender + name initials (e.g. MY-F-NP)
   useEffect(() => {
     const ethCode = ETHNICITY_CODES[formData.ethnicity] || '';
     const genCode = formData.gender === 'F' ? 'F' : 'M';
@@ -79,7 +76,6 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     setFormData(prev => ({ ...prev, id: `${ethCode}-${genCode}-${initials}` }));
   }, [formData.ethnicity, formData.gender, formData.name]);
 
-  // --- Basic Handlers ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -87,17 +83,12 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
 
   const handleArrayChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'personality' | 'bestFit') => {
     const value = e.target.value;
-    
-    // Update the local string state immediately so the user can type freely
     if (field === 'personality') setPersonalityStr(value);
     else setBestFitStr(value);
-
-    // Update the actual array in formData
     const arrayValue = value.split(',').map(item => item.trim()).filter(item => item !== '');
     setFormData(prev => ({ ...prev, [field]: arrayValue }));
   };
 
-  // --- File Upload Handlers (Supabase Storage) ---
   const uploadToStorage = async (file: File): Promise<string> => {
     const ext = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
@@ -141,7 +132,6 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     }
   };
 
-  // --- Dynamic Array Handlers ---
   const addOutfit = () => setFormData(prev => ({ ...prev, outfits: [...prev.outfits, { label: '' }] }));
   const updateOutfit = (index: number, field: keyof Outfit, value: string) => {
     const newOutfits = [...formData.outfits];
@@ -179,18 +169,18 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     }
   };
 
-  const inputClass = "w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all";
-  const labelClass = "block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2";
+  const inputClass = "w-full bg-wf-canvas border border-wf-hairline rounded-[4px] px-4 py-3 text-wf-ink text-[15px] placeholder-wf-mute-soft focus:outline-none focus:border-wf-ink transition-colors";
+  const labelClass = "block text-[11px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-2";
 
   const FileUploadBtn = ({ label, accept, onChange, previewUrl, multiple = false }: { label: string, accept: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, previewUrl?: string, multiple?: boolean }) => (
     <div className="relative group">
-      <div className={`border-2 border-dashed border-zinc-700 rounded-xl p-4 text-center hover:border-cyan-400 transition-colors cursor-pointer bg-zinc-900/50 ${previewUrl ? 'overflow-hidden' : ''} ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+      <div className={`border border-dashed border-wf-hairline rounded-[8px] p-4 text-center hover:border-wf-ink transition-colors cursor-pointer bg-wf-canvas ${previewUrl ? 'overflow-hidden' : ''} ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
         {previewUrl && !multiple ? (
-          <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity" />
+          <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-20 transition-opacity" />
         ) : null}
         <div className="relative z-10 flex flex-col items-center justify-center space-y-2">
-          <UploadCloud size={24} className={`${uploading ? 'text-zinc-600 animate-pulse' : 'text-zinc-400 group-hover:text-cyan-400'}`} />
-          <span className="text-sm font-medium text-zinc-300">{uploading ? 'Uploading...' : label}</span>
+          <UploadCloud size={22} className={`${uploading ? 'text-wf-mute-soft animate-pulse' : 'text-wf-mute group-hover:text-wf-ink'} transition-colors`} />
+          <span className="text-[13px] font-medium text-wf-body">{uploading ? 'Uploading…' : label}</span>
         </div>
         <input type="file" accept={accept} multiple={multiple} onChange={onChange} disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
       </div>
@@ -198,23 +188,26 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   );
 
   return (
-    <div className="min-h-screen bg-kult-black pb-24">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <button onClick={onCancel} className="flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors mb-8">
-          <ArrowLeft size={20} />
+    <div className="min-h-screen bg-wf-canvas pb-24">
+      <div className="max-w-5xl mx-auto px-8 py-10">
+        <button onClick={onCancel} className="flex items-center space-x-2 text-wf-mute hover:text-wf-ink transition-colors mb-10 text-sm font-medium">
+          <ArrowLeft size={18} />
           <span>Back to Dashboard</span>
         </button>
 
-        <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl overflow-hidden">
-          <div className="p-8 md:p-12 border-b border-zinc-800">
-            <h1 className="text-3xl font-black tracking-tighter mb-2">
-              {initialData ? 'EDIT TALENT' : 'ADD NEW TALENT'}
+        <div className="bg-wf-canvas border border-wf-hairline rounded-[8px] overflow-hidden shadow-wf-2">
+          <div className="px-10 py-8 border-b border-wf-hairline">
+            <p className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">
+              {initialData ? 'Edit' : 'Add'}
+            </p>
+            <h1 className="text-[32px] font-semibold text-wf-ink tracking-[-0.5px] mb-2">
+              {initialData ? 'Edit Talent' : 'Add New Talent'}
             </h1>
-            <p className="text-zinc-400">Update the catalog entry. Changes are saved locally for this session.</p>
+            <p className="text-wf-body text-[15px]">Update the catalog entry. Changes are saved to the database.</p>
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-zinc-800 px-8 md:px-12 bg-zinc-900/50">
+          <div className="flex border-b border-wf-hairline px-10 bg-gray-50">
             {[
               { id: 'basic', label: 'Basic Info' },
               { id: 'media', label: 'Media & Assets' },
@@ -224,8 +217,10 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as FormTab)}
-                className={`px-6 py-4 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                  activeTab === tab.id ? 'border-cyan-400 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                className={`px-5 py-4 text-[13px] font-medium transition-colors border-b-2 ${
+                  activeTab === tab.id
+                    ? 'border-wf-ink text-wf-ink'
+                    : 'border-transparent text-wf-mute hover:text-wf-body'
                 }`}
               >
                 {tab.label}
@@ -233,8 +228,8 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 md:p-12">
-            
+          <form onSubmit={handleSubmit} className="px-10 py-10">
+
             {/* TAB: BASIC INFO */}
             <div className={activeTab === 'basic' ? 'block space-y-8' : 'hidden'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -245,7 +240,7 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                 <div>
                   <label className={labelClass}>
                     Talent ID
-                    <span className="ml-2 text-zinc-500 normal-case font-normal tracking-normal">— auto-generated from ethnicity, gender &amp; name</span>
+                    <span className="ml-2 text-wf-mute-soft normal-case font-normal tracking-normal text-[11px]">— auto-generated</span>
                   </label>
                   <input
                     type="text"
@@ -254,7 +249,7 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                     disabled
                     placeholder="Select ethnicity and gender below"
                     required
-                    className={`${inputClass} opacity-60 cursor-not-allowed select-none bg-zinc-900 font-mono tracking-widest text-cyan-400`}
+                    className={`${inputClass} opacity-50 cursor-not-allowed select-none font-mono tracking-widest`}
                   />
                 </div>
               </div>
@@ -292,22 +287,22 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                     className={inputClass}
                   />
                   {baseAge && !isNaN(Number(baseAge)) && (
-                    <p className="text-xs text-zinc-500 mt-2">
-                      Age range: <span className="text-cyan-400 font-mono">{baseAge} – {Number(baseAge) + 5}</span>
+                    <p className="text-[12px] text-wf-mute mt-2">
+                      Age range: <span className="text-wf-ink font-medium font-mono">{baseAge} – {Number(baseAge) + 5}</span>
                     </p>
                   )}
                 </div>
               </div>
 
-              <hr className="border-zinc-800" />
+              <hr className="border-wf-hairline" />
 
               <div className="space-y-6">
                 <div>
-                  <label className={labelClass}>Personality Traits (Comma separated)</label>
+                  <label className={labelClass}>Personality Traits <span className="normal-case font-normal tracking-normal text-wf-mute-soft">(comma separated)</span></label>
                   <input type="text" value={personalityStr} onChange={(e) => handleArrayChange(e, 'personality')} placeholder="e.g. Friendly, Professional, Gen Z" className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Best Fit For (Comma separated)</label>
+                  <label className={labelClass}>Best Fit For <span className="normal-case font-normal tracking-normal text-wf-mute-soft">(comma separated)</span></label>
                   <input type="text" value={bestFitStr} onChange={(e) => handleArrayChange(e, 'bestFit')} placeholder="e.g. Beauty, Tech, Gaming" className={inputClass} />
                 </div>
               </div>
@@ -315,14 +310,15 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
 
             {/* TAB: MEDIA & ASSETS */}
             <div className={activeTab === 'media' ? 'block space-y-10' : 'hidden'}>
-              
+
               {/* Core Images */}
               <div>
-                <h3 className="text-lg font-bold mb-4 border-b border-zinc-800 pb-2">Core Profile Image</h3>
+                <h3 className="text-[18px] font-semibold text-wf-ink mb-1">Core Profile Image</h3>
+                <div className="h-px bg-wf-hairline mb-5 mt-3" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className={labelClass}>Main Card Image (3:4)</label>
-                    <p className="text-xs text-zinc-500 mb-3">Used as the talent card, avatar, and all profile appearances across the site.</p>
+                    <p className="text-[13px] text-wf-mute mb-3">Used as the talent card, avatar, and all profile appearances across the site.</p>
                     <FileUploadBtn
                       label="Upload Main Image" accept="image/*"
                       previewUrl={formData.mainImageUrl}
@@ -334,22 +330,23 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
 
               {/* Galleries */}
               <div>
-                <h3 className="text-lg font-bold mb-4 border-b border-zinc-800 pb-2">Galleries</h3>
+                <h3 className="text-[18px] font-semibold text-wf-ink mb-1">Galleries</h3>
+                <div className="h-px bg-wf-hairline mb-5 mt-3" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className={labelClass}>Turnaround View (16:9)</label>
-                    <FileUploadBtn 
-                      label="Upload Turnaround" accept="image/*" 
+                    <FileUploadBtn
+                      label="Upload Turnaround" accept="image/*"
                       previewUrl={formData.turnaroundUrls?.[0]}
-                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, turnaroundUrls: [url] })))} 
+                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, turnaroundUrls: [url] })))}
                     />
                   </div>
                   <div>
                     <label className={labelClass}>Expression Sheet (16:9)</label>
-                    <FileUploadBtn 
-                      label="Upload Expressions" accept="image/*" 
+                    <FileUploadBtn
+                      label="Upload Expressions" accept="image/*"
                       previewUrl={formData.expressionUrls?.[0]}
-                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, expressionUrls: [url] })))} 
+                      onChange={(e) => handleFileUpload(e, url => setFormData(prev => ({ ...prev, expressionUrls: [url] })))}
                     />
                   </div>
                 </div>
@@ -357,96 +354,103 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
 
               {/* Outfits */}
               <div>
-                <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-2">
-                  <h3 className="text-lg font-bold">Outfits</h3>
-                  <button type="button" onClick={addOutfit} className="text-xs flex items-center space-x-1 text-cyan-400 hover:text-cyan-300">
-                    <Plus size={14} /> <span>Add Outfit</span>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-[18px] font-semibold text-wf-ink">Outfits</h3>
+                  <button type="button" onClick={addOutfit} className="flex items-center space-x-1.5 text-[13px] font-medium text-wf-body hover:text-wf-ink transition-colors border border-wf-hairline rounded-[4px] px-3 py-1.5 hover:border-wf-ink">
+                    <Plus size={13} /> <span>Add Outfit</span>
                   </button>
                 </div>
+                <div className="h-px bg-wf-hairline mb-5 mt-3" />
                 <div className="space-y-4">
                   {formData.outfits.map((outfit, idx) => (
-                    <div key={idx} className="flex items-start space-x-4 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                      <div className="flex-1">
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-start sm:space-x-4 gap-3 sm:gap-0 bg-gray-50 p-4 rounded-[8px] border border-wf-hairline">
+                      {/* Text field — full width on mobile, flex-1 on desktop */}
+                      <div className="w-full sm:flex-1">
                         <input type="text" value={outfit.label} onChange={(e) => updateOutfit(idx, 'label', e.target.value)} placeholder="Outfit Name (e.g. Casual)" className={inputClass} />
                       </div>
-                      <div className="w-48">
-                        <FileUploadBtn 
-                          label="Image" accept="image/*" previewUrl={outfit.imageUrl}
-                          onChange={(e) => handleFileUpload(e, url => updateOutfit(idx, 'imageUrl', url))} 
-                        />
+                      {/* Upload + delete — side by side on mobile */}
+                      <div className="flex items-start gap-3 sm:gap-0 sm:space-x-4">
+                        <div className="flex-1 sm:flex-none sm:w-48">
+                          <FileUploadBtn
+                            label="Image" accept="image/*" previewUrl={outfit.imageUrl}
+                            onChange={(e) => handleFileUpload(e, url => updateOutfit(idx, 'imageUrl', url))}
+                          />
+                        </div>
+                        <button type="button" onClick={() => removeOutfit(idx)} className="p-2.5 text-wf-mute hover:text-wf-red hover:bg-red-50 rounded-[4px] transition-colors sm:mt-1">
+                          <Trash2 size={18} />
+                        </button>
                       </div>
-                      <button type="button" onClick={() => removeOutfit(idx)} className="p-3 text-zinc-500 hover:text-red-400 transition-colors mt-1">
-                        <Trash2 size={20} />
-                      </button>
                     </div>
                   ))}
-                  {formData.outfits.length === 0 && <p className="text-sm text-zinc-500 italic">No outfits added.</p>}
+                  {formData.outfits.length === 0 && <p className="text-[14px] text-wf-mute italic">No outfits added.</p>}
                 </div>
               </div>
 
               {/* Voices */}
               <div>
-                <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-2">
-                  <h3 className="text-lg font-bold">Voice Acting</h3>
-                  <button type="button" onClick={addVoice} className="text-xs flex items-center space-x-1 text-cyan-400 hover:text-cyan-300">
-                    <Plus size={14} /> <span>Add Voice</span>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-[18px] font-semibold text-wf-ink">Voice Acting</h3>
+                  <button type="button" onClick={addVoice} className="flex items-center space-x-1.5 text-[13px] font-medium text-wf-body hover:text-wf-ink transition-colors border border-wf-hairline rounded-[4px] px-3 py-1.5 hover:border-wf-ink">
+                    <Plus size={13} /> <span>Add Voice</span>
                   </button>
                 </div>
+                <div className="h-px bg-wf-hairline mb-5 mt-3" />
                 <div className="space-y-4">
                   {formData.voices.map((voice, idx) => (
-                    <div key={idx} className="flex items-center space-x-4 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                    <div key={idx} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-[8px] border border-wf-hairline">
                       <div className="flex-1">
                         <input type="text" value={voice.language} onChange={(e) => updateVoice(idx, 'language', e.target.value)} placeholder="Language (e.g. English)" className={inputClass} />
                       </div>
                       <div className="w-48 relative">
-                        <div className={`border border-zinc-700 rounded-lg p-3 text-center hover:border-cyan-400 transition-colors cursor-pointer bg-zinc-950 ${voice.audioUrl ? 'border-cyan-500/50 bg-cyan-500/10' : ''}`}>
+                        <div className={`border border-wf-hairline rounded-[4px] p-3 text-center hover:border-wf-ink transition-colors cursor-pointer bg-wf-canvas ${voice.audioUrl ? 'border-wf-ink bg-wf-ink/5' : ''}`}>
                           <div className="flex items-center justify-center space-x-2">
-                            <Mic size={16} className={voice.audioUrl ? 'text-cyan-400' : 'text-zinc-400'} />
-                            <span className="text-xs font-medium text-zinc-300">{voice.audioUrl ? 'Audio Set' : 'Upload Audio'}</span>
+                            <Mic size={15} className={voice.audioUrl ? 'text-wf-ink' : 'text-wf-mute'} />
+                            <span className="text-[13px] font-medium text-wf-body">{voice.audioUrl ? 'Audio Set' : 'Upload Audio'}</span>
                           </div>
                           <input type="file" accept="audio/*" onChange={(e) => handleFileUpload(e, url => updateVoice(idx, 'audioUrl', url))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         </div>
                       </div>
-                      <button type="button" onClick={() => removeVoice(idx)} className="p-3 text-zinc-500 hover:text-red-400 transition-colors">
-                        <Trash2 size={20} />
+                      <button type="button" onClick={() => removeVoice(idx)} className="p-2.5 text-wf-mute hover:text-wf-red hover:bg-red-50 rounded-[4px] transition-colors">
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   ))}
-                  {formData.voices.length === 0 && <p className="text-sm text-zinc-500 italic">No voices added.</p>}
+                  {formData.voices.length === 0 && <p className="text-[14px] text-wf-mute italic">No voices added.</p>}
                 </div>
               </div>
 
               {/* Fallback Seed */}
-              <div className="pt-6 border-t border-zinc-800">
+              <div className="pt-6 border-t border-wf-hairline">
                 <label className={labelClass}>Fallback Image Seed</label>
                 <div className="flex space-x-4">
                   <div className="flex-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <ImageIcon size={18} className="text-zinc-500" />
+                      <ImageIcon size={16} className="text-wf-mute" />
                     </div>
-                    <input required type="text" name="imageSeed" value={formData.imageSeed} onChange={handleChange} placeholder="Unique word for fallback generation" className={`${inputClass} pl-12`} />
+                    <input required type="text" name="imageSeed" value={formData.imageSeed} onChange={handleChange} placeholder="Unique word for fallback generation" className={`${inputClass} pl-11`} />
                   </div>
                 </div>
-                <p className="text-xs text-zinc-500 mt-2">Used to generate placeholder images if custom media is not uploaded.</p>
+                <p className="text-[12px] text-wf-mute mt-2">Used to generate placeholder images if custom media is not uploaded.</p>
               </div>
             </div>
 
             {/* TAB: USE CASES */}
             <div className={activeTab === 'usecases' ? 'block space-y-6' : 'hidden'}>
-              <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-2">
-                <h3 className="text-lg font-bold">Campaign Use Cases</h3>
-                <button type="button" onClick={addUseCase} className="text-xs flex items-center space-x-1 text-cyan-400 hover:text-cyan-300">
-                  <Plus size={14} /> <span>Add Use Case</span>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-[18px] font-semibold text-wf-ink">Campaign Use Cases</h3>
+                <button type="button" onClick={addUseCase} className="flex items-center space-x-1.5 text-[13px] font-medium text-wf-body hover:text-wf-ink transition-colors border border-wf-hairline rounded-[4px] px-3 py-1.5 hover:border-wf-ink">
+                  <Plus size={13} /> <span>Add Use Case</span>
                 </button>
               </div>
-              
+              <div className="h-px bg-wf-hairline mb-5" />
+
               <div className="space-y-8">
                 {(formData.useCases || []).map((useCase, idx) => (
-                  <div key={idx} className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 relative">
-                    <button type="button" onClick={() => removeUseCase(idx)} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 transition-colors">
-                      <Trash2 size={18} />
+                  <div key={idx} className="bg-gray-50 p-6 rounded-[8px] border border-wf-hairline relative">
+                    <button type="button" onClick={() => removeUseCase(idx)} className="absolute top-4 right-4 p-2 text-wf-mute hover:text-wf-red hover:bg-red-50 rounded-[4px] transition-colors">
+                      <Trash2 size={16} />
                     </button>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="md:col-span-2 space-y-4">
                         <div>
@@ -455,32 +459,32 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                         </div>
                         <div>
                           <label className={labelClass}>Description</label>
-                          <textarea value={useCase.description} onChange={(e) => updateUseCase(idx, 'description', e.target.value)} placeholder="Describe how the talent is used..." rows={4} className={inputClass} />
+                          <textarea value={useCase.description} onChange={(e) => updateUseCase(idx, 'description', e.target.value)} placeholder="Describe how the talent is used…" rows={4} className={inputClass} />
                         </div>
                       </div>
                       <div>
                         <label className={labelClass}>Preview Image (16:9)</label>
                         <div className="h-full min-h-[150px]">
-                          <FileUploadBtn 
+                          <FileUploadBtn
                             label="Upload Image" accept="image/*" previewUrl={useCase.imageUrl}
-                            onChange={(e) => handleFileUpload(e, url => updateUseCase(idx, 'imageUrl', url))} 
+                            onChange={(e) => handleFileUpload(e, url => updateUseCase(idx, 'imageUrl', url))}
                           />
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                {(!formData.useCases || formData.useCases.length === 0) && <p className="text-sm text-zinc-500 italic">No use cases added.</p>}
+                {(!formData.useCases || formData.useCases.length === 0) && <p className="text-[14px] text-wf-mute italic">No use cases added.</p>}
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="pt-10 mt-10 border-t border-zinc-800 flex items-center justify-end space-x-4">
-              <button type="button" onClick={onCancel} className="px-6 py-3 rounded-full font-bold text-zinc-400 hover:text-white transition-colors">
+            <div className="pt-10 mt-10 border-t border-wf-hairline flex items-center justify-end space-x-3">
+              <button type="button" onClick={onCancel} className="px-6 py-3 border border-wf-hairline rounded-[4px] text-sm font-medium text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors">
                 Cancel
               </button>
-              <button type="submit" className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity shadow-lg shadow-cyan-500/20">
-                <Save size={20} />
+              <button type="submit" disabled={uploading} className="flex items-center space-x-2 bg-wf-ink text-white px-8 py-3 rounded-[4px] text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed">
+                <Save size={17} />
                 <span>Save Talent</span>
               </button>
             </div>

@@ -11,12 +11,10 @@ import { Talent } from './types.ts';
 import { supabase, toDb, fromDb } from './lib/supabaseClient.ts';
 
 type ViewState = 'home' | 'catalog' | 'detail' | 'admin' | 'form' | 'login';
-type Role = 'user' | 'admin';
 
 export default function App() {
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<Role>('user');
   const [view, setView] = useState<ViewState>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
@@ -27,7 +25,6 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
-        setRole('admin');
       }
     });
   }, []);
@@ -84,30 +81,14 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleRoleSelect = (selectedRole: Role) => {
-    if (selectedRole === 'user') {
-      setRole('user');
-      navigateToHome();
-    } else if (selectedRole === 'admin') {
-      if (!isAuthenticated) {
-        setView('login');
-      } else {
-        setRole('admin');
-        navigateToAdmin();
-      }
-    }
-  };
-
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    setRole('admin');
     setView('admin');
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
-    setRole('user');
     navigateToHome();
   };
 
@@ -203,8 +184,8 @@ export default function App() {
     if (loading) {
       return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-          <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
-          <p className="text-zinc-500 font-medium animate-pulse uppercase tracking-widest text-xs">Loading Library...</p>
+          <div className="w-10 h-10 border-2 border-wf-hairline border-t-wf-ink rounded-full animate-spin"></div>
+          <p className="text-wf-mute font-medium animate-pulse uppercase tracking-[1.5px] text-[11px]">Loading Library…</p>
         </div>
       );
     }
@@ -221,15 +202,15 @@ export default function App() {
           <TalentDetail
             talent={selectedTalent}
             onBack={navigateToHome}
-            isAdmin={role === 'admin' && isAuthenticated}
+            isAdmin={isAuthenticated}
             onEdit={() => handleEditTalentClick(selectedTalent)}
           />
         );
       }
       case 'login':
-        return <Login onLoginSuccess={handleLoginSuccess} onCancel={navigateToHome} />;
+        return <Login onLoginSuccess={handleLoginSuccess} />;
       case 'admin':
-        if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} onCancel={navigateToHome} />;
+        if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} />;
         return (
           <AdminDashboard
             talents={talents}
@@ -237,10 +218,11 @@ export default function App() {
             onEditTalent={handleEditTalentClick}
             onDeleteTalent={handleDeleteTalent}
             onReorderTalents={handleReorderTalents}
+            onSelectTalent={handleSelectTalent}
           />
         );
       case 'form':
-        if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} onCancel={navigateToHome} />;
+        if (!isAuthenticated) return <Login onLoginSuccess={handleLoginSuccess} />;
         return (
           <TalentForm
             initialData={editingTalent}
@@ -261,15 +243,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-kult-black text-white font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-wf-canvas text-wf-ink font-sans selection:bg-wf-blue-info/20" style={{ scrollbarGutter: 'stable' }}>
       <Header
         onLogoClick={navigateToHome}
         onLibraryClick={handleLibraryClick}
-        role={role}
         isAuthenticated={isAuthenticated}
-        onRoleSelect={handleRoleSelect}
+        onLoginClick={navigateToAdmin}
         onAdminClick={navigateToAdmin}
         onLogout={handleLogout}
+        currentView={view}
       />
       <main>
         {renderView()}
