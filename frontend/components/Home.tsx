@@ -62,6 +62,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
         const match =
           t.name.toLowerCase().includes(q) ||
           t.id.toLowerCase().includes(q) ||
+          t.ethnicity.toLowerCase().includes(q) ||
           t.personality.some(p => p.toLowerCase().includes(q)) ||
           t.bestFit.some(b => b.toLowerCase().includes(q));
         if (!match) return false;
@@ -107,7 +108,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
   return (
     <div className="min-h-screen bg-wf-canvas pb-24">
       {/* Hero */}
-      <section className="max-w-[1440px] mx-auto px-8 pt-24 pb-20 text-center flex flex-col items-center">
+      <section className="max-w-[1440px] mx-auto px-4 md:px-8 py-10 md:pt-16 text-center flex flex-col items-center">
         <h1 className="text-[clamp(40px,8vw,80px)] font-semibold text-wf-ink tracking-[-0.8px] leading-[1.04] mb-8 w-full">
           KULT AI Talent Library
         </h1>
@@ -123,7 +124,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
       </section>
 
       {/* Steps */}
-      <section className="max-w-[1440px] mx-auto px-8 py-12">
+      <section className="max-w-[1440px] mx-auto px-4 md:px-8 py-10">
         <p className="text-[15px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-10">How it works</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
@@ -131,7 +132,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
             { icon: <MousePointerClick size={22} />, title: 'Select', desc: 'Choose the talent that best matches your brand or campaign.' },
             { icon: <Sliders size={22} />, title: 'Customise', desc: 'We adapt the selected talent into your product, scene, outfit, video, or campaign format.' },
           ].map(({ icon, title, desc }) => (
-            <div key={title} className="bg-wf-canvas border border-wf-hairline rounded-[8px] p-8">
+            <div key={title} className="bg-wf-canvas border border-wf-hairline rounded-[8px] p-6 md:p-8">
               <div className="text-wf-ink mb-5">{icon}</div>
               <h3 className="text-[20px] font-semibold text-wf-ink mb-3">{title}</h3>
               <p className="text-wf-body text-[15px] leading-[24px]">{desc}</p>
@@ -141,7 +142,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
       </section>
 
       {/* Talent Overview */}
-      <section id="talent-overview" className="max-w-[1440px] mx-auto px-8 py-20 scroll-mt-24">
+      <section id="talent-overview" className="max-w-[1440px] mx-auto px-4 md:px-8 py-10 scroll-mt-24">
         <div className="mb-10">
           <p className="text-[15px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">Catalog</p>
           <h2 className="text-[44px] font-semibold text-wf-ink tracking-[-0.5px] leading-[46px]">Talent Overview</h2>
@@ -321,6 +322,7 @@ export const Home: React.FC<HomeProps> = ({ talents, onSelectTalent }) => {
           )}
         </div>
       </section>
+
     </div>
   );
 };

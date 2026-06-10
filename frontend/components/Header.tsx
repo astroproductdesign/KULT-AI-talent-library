@@ -3,7 +3,7 @@ import { LogOut, Menu, X } from 'lucide-react';
 
 interface HeaderProps {
   onLogoClick: () => void;
-  onLibraryClick: () => void;
+  onHomeClick: () => void;
   isAuthenticated: boolean;
   onLoginClick: () => void;
   onAdminClick: () => void;
@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   onLogoClick,
-  onLibraryClick,
+  onHomeClick,
   isAuthenticated,
   onLoginClick,
   onAdminClick,
@@ -21,52 +21,52 @@ export const Header: React.FC<HeaderProps> = ({
   currentView,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isLibraryActive = !currentView || ['home', 'catalog', 'detail'].includes(currentView);
+  const isHomeActive = currentView === 'home';
   const isDashboardActive = currentView === 'admin' || currentView === 'form';
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 bg-wf-canvas border-b border-wf-hairline">
-      <div className="max-w-[1440px] mx-auto px-8 h-16 flex items-center justify-between">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
 
         {/* Hamburger (mobile) + Logo + Desktop Nav */}
-        <div className="flex items-center space-x-3 md:space-x-10">
+        <div className="flex items-center">
           {/* Hamburger — mobile only, leftmost */}
           <button
             onClick={() => setMobileMenuOpen(o => !o)}
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-[4px] border border-wf-hairline text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors"
+            className="md:hidden flex items-center justify-center w-9 h-9 mr-3 rounded-[4px] border border-wf-hairline text-wf-body hover:border-wf-ink hover:text-wf-ink transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
 
           <div
-            className="text-xl font-semibold tracking-tight text-wf-ink cursor-pointer hover:opacity-70 transition-opacity"
+            className="cursor-pointer hover:opacity-70 transition-opacity"
             onClick={() => { onLogoClick(); closeMobileMenu(); }}
           >
-            KULT
+            <img src="/kult-logo.png" alt="KULT" className="h-12 md:h-16 w-auto" />
           </div>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center space-x-7 h-full">
+          <nav className="hidden md:flex items-center space-x-8 ml-10">
             <button
-              onClick={onLibraryClick}
-              className={`text-sm font-medium transition-colors border-b-2 pb-[1px] ${
-                isLibraryActive
-                  ? 'text-wf-ink border-wf-ink'
-                  : 'text-wf-mute border-transparent hover:text-wf-ink'
+              onClick={onHomeClick}
+              className={`text-sm transition-colors ${
+                isHomeActive
+                  ? 'text-wf-ink font-semibold'
+                  : 'text-wf-mute font-medium hover:text-wf-ink'
               }`}
             >
-              Library
+              Home
             </button>
             {isAuthenticated && (
               <button
                 onClick={onAdminClick}
-                className={`text-sm font-medium transition-colors border-b-2 pb-[1px] ${
+                className={`text-sm transition-colors ${
                   isDashboardActive
-                    ? 'text-wf-ink border-wf-ink'
-                    : 'text-wf-mute border-transparent hover:text-wf-ink'
+                    ? 'text-wf-ink font-semibold'
+                    : 'text-wf-mute font-medium hover:text-wf-ink'
                 }`}
               >
                 Dashboard
@@ -104,16 +104,16 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-wf-hairline bg-wf-canvas">
-          <nav className="max-w-[1440px] mx-auto px-8 py-4 flex flex-col space-y-1">
+          <nav className="max-w-[1440px] mx-auto px-4 md:px-8 py-4 flex flex-col space-y-1">
             <button
-              onClick={() => { onLibraryClick(); closeMobileMenu(); }}
+              onClick={() => { onHomeClick(); closeMobileMenu(); }}
               className={`w-full text-left px-4 py-3 rounded-[4px] text-sm font-medium transition-colors ${
-                isLibraryActive
+                isHomeActive
                   ? 'bg-gray-50 text-wf-ink'
                   : 'text-wf-mute hover:text-wf-ink hover:bg-gray-50'
               }`}
             >
-              Library
+              Home
             </button>
             {isAuthenticated && (
               <button

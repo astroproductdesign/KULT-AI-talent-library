@@ -73,24 +73,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-wf-canvas pb-24">
-      <section className="max-w-[1440px] mx-auto px-8 pt-16 pb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-          <div>
-            <p className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">Management</p>
-            <h1 className="text-[44px] font-semibold text-wf-ink tracking-[-0.5px] leading-[46px] mb-2">Admin Dashboard</h1>
-            <p className="text-wf-body text-[15px]">Manage your AI talent catalog. Drag rows to reorder the talent library display order.</p>
-          </div>
-          <button
-            onClick={onAddTalent}
-            className="flex items-center space-x-2 bg-wf-ink text-white px-6 py-3 rounded-[4px] text-sm font-medium hover:opacity-80 transition-opacity flex-shrink-0"
-          >
-            <Plus size={18} />
-            <span>Add New Talent</span>
-          </button>
+      <section className="max-w-[1440px] mx-auto px-4 md:px-8 pt-16 pb-8">
+        <div className="mb-8">
+          <p className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">Management</p>
+          <h1 className="text-[44px] font-semibold text-wf-ink tracking-[-0.5px] leading-[46px] mb-2">Admin Dashboard</h1>
+          <p className="text-wf-body text-[15px]">Manage your AI talent catalog. Drag rows to reorder the talent library display order.</p>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6 relative w-full md:w-96">
+        <div className="mb-3 relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search size={16} className="text-wf-mute" />
           </div>
@@ -109,6 +100,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <X size={14} />
             </button>
           )}
+        </div>
+
+        {/* Talent count + Add button */}
+        <div className="flex items-center justify-between gap-3 mt-6 mb-6">
+          <p className="text-sm text-wf-body">
+            <span className="font-semibold text-wf-ink">{displayList.length}</span> talent{displayList.length !== 1 ? 's' : ''}{searchTerm && <span className="text-wf-mute"> found</span>}
+          </p>
+          <button
+            onClick={onAddTalent}
+            className="flex items-center space-x-2 bg-wf-ink text-white px-6 py-3 rounded-[4px] text-sm font-medium hover:opacity-80 transition-opacity flex-shrink-0"
+          >
+            <Plus size={18} />
+            <span>Add New Talent</span>
+          </button>
         </div>
 
         {/* ── Mobile card list ── */}

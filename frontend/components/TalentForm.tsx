@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Talent, Outfit, Voice, UseCase } from '../types.ts';
-import { ArrowLeft, Save, UploadCloud, Plus, Trash2, Image as ImageIcon, Mic } from 'lucide-react';
+import { ArrowLeft, Save, UploadCloud, Plus, Trash2, Image as ImageIcon, Mic, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.ts';
 
 const ETHNICITY_CODES: Record<string, string> = {
@@ -170,6 +170,7 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   };
 
   const inputClass = "w-full bg-wf-canvas border border-wf-hairline rounded-[4px] px-4 py-3 text-wf-ink text-[15px] placeholder-wf-mute-soft focus:outline-none focus:border-wf-ink transition-colors";
+  const selectClass = `${inputClass} appearance-none pr-10 cursor-pointer`;
   const labelClass = "block text-[11px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-2";
 
   const FileUploadBtn = ({ label, accept, onChange, previewUrl, multiple = false }: { label: string, accept: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, previewUrl?: string, multiple?: boolean }) => (
@@ -189,14 +190,14 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
 
   return (
     <div className="min-h-screen bg-wf-canvas pb-24">
-      <div className="max-w-5xl mx-auto px-8 py-10">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-10">
         <button onClick={onCancel} className="flex items-center space-x-2 text-wf-mute hover:text-wf-ink transition-colors mb-10 text-sm font-medium">
           <ArrowLeft size={18} />
           <span>Back to Dashboard</span>
         </button>
 
         <div className="bg-wf-canvas border border-wf-hairline rounded-[8px] overflow-hidden shadow-wf-2">
-          <div className="px-10 py-8 border-b border-wf-hairline">
+          <div className="px-6 md:px-10 py-6 md:py-8 border-b border-wf-hairline">
             <p className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-3">
               {initialData ? 'Edit' : 'Add'}
             </p>
@@ -207,28 +208,30 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-wf-hairline px-10 bg-gray-50">
-            {[
-              { id: 'basic', label: 'Basic Info' },
-              { id: 'media', label: 'Media & Assets' },
-              { id: 'usecases', label: 'Use Cases' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id as FormTab)}
-                className={`px-5 py-4 text-[13px] font-medium transition-colors border-b-2 ${
-                  activeTab === tab.id
-                    ? 'border-wf-ink text-wf-ink'
-                    : 'border-transparent text-wf-mute hover:text-wf-body'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="border-b border-wf-hairline px-6">
+            <div className="flex overflow-x-auto space-x-8 pt-4 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+              {[
+                { id: 'basic', label: 'Basic Info' },
+                { id: 'media', label: 'Media & Assets' },
+                { id: 'usecases', label: 'Use Cases' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id as FormTab)}
+                  className={`flex-shrink-0 whitespace-nowrap text-sm font-medium pb-4 mb-[-1px] transition-colors border-b-2 ${
+                    activeTab === tab.id
+                      ? 'text-wf-ink border-wf-ink'
+                      : 'text-wf-mute border-transparent hover:text-wf-body'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="px-10 py-10">
+          <form onSubmit={handleSubmit} className="px-6 py-10">
 
             {/* TAB: BASIC INFO */}
             <div className={activeTab === 'basic' ? 'block space-y-8' : 'hidden'}>
@@ -257,22 +260,28 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className={labelClass}>Ethnicity</label>
-                  <select required name="ethnicity" value={formData.ethnicity} onChange={handleChange} className={inputClass}>
-                    <option value="" disabled>Select ethnicity</option>
-                    <option value="Malay">Malay</option>
-                    <option value="Chinese">Chinese</option>
-                    <option value="Indian">Indian</option>
-                    <option value="Iban">Iban</option>
-                    <option value="Kadazan-Dusun">Kadazan-Dusun</option>
-                    <option value="Others">Others</option>
-                  </select>
+                  <div className="relative">
+                    <select required name="ethnicity" value={formData.ethnicity} onChange={handleChange} className={selectClass}>
+                      <option value="" disabled>Select ethnicity</option>
+                      <option value="Malay">Malay</option>
+                      <option value="Chinese">Chinese</option>
+                      <option value="Indian">Indian</option>
+                      <option value="Iban">Iban</option>
+                      <option value="Kadazan-Dusun">Kadazan-Dusun</option>
+                      <option value="Others">Others</option>
+                    </select>
+                    <ChevronDown size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-wf-mute" />
+                  </div>
                 </div>
                 <div>
                   <label className={labelClass}>Gender</label>
-                  <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass}>
-                    <option value="F">Female</option>
-                    <option value="M">Male</option>
-                  </select>
+                  <div className="relative">
+                    <select name="gender" value={formData.gender} onChange={handleChange} className={selectClass}>
+                      <option value="F">Female</option>
+                      <option value="M">Male</option>
+                    </select>
+                    <ChevronDown size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-wf-mute" />
+                  </div>
                 </div>
                 <div>
                   <label className={labelClass}>Age</label>

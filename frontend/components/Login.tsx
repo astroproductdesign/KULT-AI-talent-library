@@ -31,8 +31,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-6 bg-wf-canvas">
-      <div className="w-full max-w-md bg-wf-canvas border border-wf-hairline rounded-[8px] p-10 shadow-wf-2">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 md:px-6 bg-wf-canvas">
+      <div className="w-full max-w-md md:border md:border-wf-hairline md:rounded-[8px] md:p-10 md:shadow-wf-2">
 
         <div className="flex justify-center mb-8">
           <div className="w-14 h-14 bg-wf-ink rounded-full flex items-center justify-center">

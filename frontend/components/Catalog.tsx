@@ -70,7 +70,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
 
   return (
     <div className="min-h-screen bg-wf-canvas pb-24">
-      <section className="max-w-[1440px] mx-auto px-8 py-10">
+      <section className="max-w-[1440px] mx-auto px-4 md:px-8 py-10">
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-wf-mute hover:text-wf-ink transition-colors mb-10 text-sm font-medium"
@@ -195,7 +195,7 @@ export const Catalog: React.FC<CatalogProps> = ({ talents, onSelectTalent, onBac
 
             {/* Suggestions */}
             {talents.length > 0 && (
-              <div className="px-8">
+              <div className="px-6 md:px-8">
                 <h4 className="text-[11px] font-medium text-wf-mute uppercase tracking-[1.5px] mb-6 border-b border-wf-hairline pb-3">Suggested Talents</h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">

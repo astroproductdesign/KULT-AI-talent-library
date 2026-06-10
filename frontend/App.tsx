@@ -6,6 +6,7 @@ import { TalentDetail } from './components/TalentDetail.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { TalentForm } from './components/TalentForm.tsx';
 import { Login } from './components/Login.tsx';
+import { Snackbar } from './components/Snackbar.tsx';
 import { talents as initialTalents } from './data.ts';
 import { Talent } from './types.ts';
 import { supabase, toDb, fromDb } from './lib/supabaseClient.ts';
@@ -19,6 +20,13 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [editingTalent, setEditingTalent] = useState<Talent | null>(null);
+  const [snackbar, setSnackbar] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+
+  const showSnackbar = (message: string) => {
+    setSnackbar({ message, visible: false });
+    // Force re-trigger if already showing
+    requestAnimationFrame(() => setSnackbar({ message, visible: true }));
+  };
 
   // Restore session on page load
   useEffect(() => {
@@ -62,14 +70,7 @@ export default function App() {
   };
 
   const handleLibraryClick = () => {
-    if (view !== 'home') {
-      setView('home');
-      setTimeout(() => {
-        document.getElementById('talent-overview')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      document.getElementById('talent-overview')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigateToHome();
   };
 
   const navigateToAdmin = () => {
@@ -84,12 +85,14 @@ export default function App() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     setView('admin');
+    showSnackbar('Logged in successfully');
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     navigateToHome();
+    showSnackbar('Logged out successfully');
   };
 
   const handleSelectTalent = (id: string) => {
@@ -115,6 +118,7 @@ export default function App() {
       const { error } = await supabase.from('talents').delete().eq('id', id);
       if (error) throw error;
       setTalents(prev => prev.filter(t => t.id !== id));
+      showSnackbar('Talent deleted');
     } catch (err) {
       console.error('Error deleting talent:', err);
       alert('Failed to delete talent. Please try again.');
@@ -156,6 +160,7 @@ export default function App() {
         }
         // Update local state — replace by old ID, put new talent object in
         setTalents(prev => prev.map(t => t.id === editingTalent.id ? savedTalent : t));
+        showSnackbar('Talent updated successfully');
         // If user was viewing the detail page of the edited talent, update the selected ID
         if (selectedTalentId === editingTalent.id) {
           setSelectedTalentId(savedTalent.id);
@@ -171,6 +176,7 @@ export default function App() {
           .single();
         if (error) throw error;
         setTalents(prev => [...prev, fromDb(data)]);
+        showSnackbar('Talent added successfully');
         navigateToAdmin();
       }
     } catch (err: any) {
@@ -246,7 +252,7 @@ export default function App() {
     <div className="min-h-screen bg-wf-canvas text-wf-ink font-sans selection:bg-wf-blue-info/20" style={{ scrollbarGutter: 'stable' }}>
       <Header
         onLogoClick={navigateToHome}
-        onLibraryClick={handleLibraryClick}
+        onHomeClick={handleLibraryClick}
         isAuthenticated={isAuthenticated}
         onLoginClick={navigateToAdmin}
         onAdminClick={navigateToAdmin}
@@ -256,6 +262,11 @@ export default function App() {
       <main>
         {renderView()}
       </main>
+      <Snackbar
+        message={snackbar.message}
+        visible={snackbar.visible}
+        onHide={() => setSnackbar(s => ({ ...s, visible: false }))}
+      />
     </div>
   );
 }

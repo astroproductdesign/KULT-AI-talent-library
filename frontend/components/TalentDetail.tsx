@@ -55,7 +55,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
 
   return (
     <div className="min-h-screen bg-wf-canvas pb-24">
-      <div className="max-w-[1440px] mx-auto px-8 py-10">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-10">
 
         {/* Top Action Bar */}
         <div className="flex items-center justify-between mb-10">
@@ -79,7 +79,7 @@ export const TalentDetail: React.FC<TalentDetailProps> = ({ talent, onBack, isAd
 
           {/* Left Column: Profile Card */}
           <div className="lg:col-span-4 space-y-8">
-            <div className="bg-wf-canvas border border-wf-hairline p-8 rounded-[8px] shadow-wf-2">
+            <div className="bg-wf-canvas border border-wf-hairline p-6 md:p-8 rounded-[8px] shadow-wf-2">
               <div className="mb-6">
                 <span className="text-[12px] font-medium text-wf-mute uppercase tracking-[1.5px]">{talent.id}</span>
                 <h1 className="text-[32px] font-semibold text-wf-ink tracking-[-0.5px] mt-2 leading-[38px]">{talent.name}</h1>
