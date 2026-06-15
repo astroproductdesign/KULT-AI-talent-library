@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Talent, Outfit, Voice, UseCase } from '../types.ts';
 import { ArrowLeft, Save, UploadCloud, Plus, Trash2, Image as ImageIcon, Mic, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.ts';
@@ -10,6 +10,23 @@ const ETHNICITY_CODES: Record<string, string> = {
   'Iban':          'IB',
   'Kadazan-Dusun': 'KD',
   'Others':        'OT',
+};
+
+const ID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const randomSuffix = () =>
+  Array.from({ length: 2 }, () => ID_CHARS[Math.floor(Math.random() * ID_CHARS.length)]).join('');
+
+const generateUniqueId = async (ethCode: string, genCode: string, supabaseClient: typeof import('../lib/supabaseClient.ts').supabase): Promise<string> => {
+  for (let i = 0; i < 50; i++) {
+    const id = `${ethCode}-${genCode}-${randomSuffix()}`;
+    const { count } = await supabaseClient
+      .from('talents')
+      .select('*', { count: 'exact', head: true })
+      .eq('id', id);
+    if (count === 0) return id;
+  }
+  // Failsafe — extremely unlikely with 1296 possible suffixes
+  return `${ethCode}-${genCode}-${randomSuffix()}`;
 };
 
 interface TalentFormProps {
@@ -48,6 +65,11 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
   const [formData, setFormData] = useState<Talent>(initialData || defaultTalent);
   const [activeTab, setActiveTab] = useState<FormTab>('basic');
   const [uploading, setUploading] = useState(false);
+  const [generatingId, setGeneratingId] = useState(false);
+  const isEditing = !!initialData;
+  // For new talents: the 2-char suffix is generated once and never changes,
+  // even when the user switches ethnicity or gender.
+  const fixedSuffix = useRef<string>('');
 
   const [personalityStr, setPersonalityStr] = useState(formData.personality.join(', '));
   const [bestFitStr, setBestFitStr] = useState(formData.bestFit.join(', '));
@@ -61,20 +83,51 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
     setFormData(prev => ({ ...prev, ageRange: !isNaN(num) ? `${num} - ${num + 5}` : '' }));
   };
 
+  // When ethnicity or gender changes, update the ID prefix while preserving the suffix.
+  // - New talent: generate a full random unique ID (ETHNICITY-GENDER-XX)
+  // - Editing talent: keep the original 2-char suffix, rebuild with the new prefix.
+  //   If the rebuilt ID conflicts with another talent, fall back to a new random suffix.
   useEffect(() => {
-    const ethCode = ETHNICITY_CODES[formData.ethnicity] || '';
+    const ethCode = ETHNICITY_CODES[formData.ethnicity];
+    if (!ethCode) { if (!isEditing) setFormData(prev => ({ ...prev, id: '' })); return; }
     const genCode = formData.gender === 'F' ? 'F' : 'M';
-    const initials = formData.name
-      .trim()
-      .split(/\s+/)
-      .map(w => w[0]?.toUpperCase() || '')
-      .join('');
-    if (!ethCode || !initials) {
-      setFormData(prev => ({ ...prev, id: ethCode ? `${ethCode}-${genCode}-` : '' }));
+
+    if (isEditing) {
+      const originalSuffix = initialData?.id?.split('-').pop() ?? '';
+      if (originalSuffix.length !== 2) return;
+      const rebuiltId = `${ethCode}-${genCode}-${originalSuffix}`;
+      // Check if rebuilt ID conflicts with a *different* talent
+      supabase
+        .from('talents')
+        .select('*', { count: 'exact', head: true })
+        .eq('id', rebuiltId)
+        .neq('id', initialData?.id ?? '')
+        .then(({ count }) => {
+          if (count === 0) {
+            setFormData(prev => ({ ...prev, id: rebuiltId }));
+          } else {
+            // Collision — generate a fresh unique suffix instead
+            generateUniqueId(ethCode, genCode, supabase).then(id => {
+              setFormData(prev => ({ ...prev, id }));
+            });
+          }
+        });
       return;
     }
-    setFormData(prev => ({ ...prev, id: `${ethCode}-${genCode}-${initials}` }));
-  }, [formData.ethnicity, formData.gender, formData.name]);
+
+    // New talent: suffix is generated once; subsequent ethnicity/gender changes only update the prefix
+    if (!fixedSuffix.current) {
+      setGeneratingId(true);
+      generateUniqueId(ethCode, genCode, supabase).then(id => {
+        fixedSuffix.current = id.split('-')[2]; // store the 2-char suffix
+        setFormData(prev => ({ ...prev, id }));
+        setGeneratingId(false);
+      });
+    } else {
+      setFormData(prev => ({ ...prev, id: `${ethCode}-${genCode}-${fixedSuffix.current}` }));
+    }
+  }, [formData.ethnicity, formData.gender]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -248,9 +301,9 @@ export const TalentForm: React.FC<TalentFormProps> = ({ initialData, onSave, onC
                   <input
                     type="text"
                     name="id"
-                    value={formData.id}
+                    value={generatingId ? 'Generating…' : formData.id}
                     disabled
-                    placeholder="Select ethnicity and gender below"
+                    placeholder="Select ethnicity and gender"
                     required
                     className={`${inputClass} opacity-50 cursor-not-allowed select-none font-mono tracking-widest`}
                   />
